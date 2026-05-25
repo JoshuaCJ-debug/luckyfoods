@@ -1,7 +1,7 @@
 // middleware/auth.js
 import jwt from 'jsonwebtoken';
 import asyncHandler from 'express-async-handler';
-import Staff from '../models/staff.js';
+import Staff from '../models/Staff.js';
 import Customer from '../models/Customer.js';
 
 // Middleware to ensure a user is logged in
