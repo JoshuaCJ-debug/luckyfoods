@@ -1,0 +1,46 @@
+# Node modules
+node_modules/
+**/node_modules/
+
+# Environment
+.env
+.env.*
+**/.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.suo
+
+# Builds
+frontend/florence_foods/dist/
+frontend/florence_foods/build/
+backend/dist/
+
+# Coverage
+coverage/
+coverage/**
+
+# MongoDB local data
+data/
+**/data/
+*.lock
+WiredTiger.lock
+
+# Local node/pnpm artifacts
+.pnp.cjs
+.pnpm-debug.log
+
+# Misc
+*.tmp
+*.bak
