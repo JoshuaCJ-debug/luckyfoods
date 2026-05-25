@@ -379,7 +379,7 @@ const MenuView = ({ onAddToCart }) => {
 // ─── CHECKOUT SCREEN ────────────────────────────────────
 const CheckoutScreen = ({ token, onBack }) => {
     const { cartArray, totalItems, totalAmount, clearCart } = useCart();
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const [step, setStep] = useState('review');
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
@@ -400,7 +400,12 @@ const CheckoutScreen = ({ token, onBack }) => {
             await new Promise(r => setTimeout(r, 500));
             const orderItems = cartArray.map(i => ({ name: i.name, quantity: i.quantity, price: i.orderPrice }));
             const order = await apiCall('/api/orders', 'POST', { items: orderItems, totalAmount }, token);
-            setResult(order); clearCart(); setStep('success');
+            setResult(order);
+            // If backend returned loyalty info, update local user immediately so UI reflects new points
+            if (order && order.loyalty && typeof order.loyalty.totalPoints === 'number') {
+                updateUser({ loyaltyPoints: order.loyalty.totalPoints });
+            }
+            clearCart(); setStep('success');
         } catch (err) { setError(err.message); setStep('review'); }
     };
 
@@ -770,6 +775,11 @@ const AuthProvider = ({ children }) => {
         const userRole = data.role || 'Customer';
         localStorage.setItem('auth_token', data.token); localStorage.setItem('user_type', data.userType); localStorage.setItem('user_role', userRole);
         setAuthState({ isAuthenticated: true, user: data, token: data.token, isStaff, userType: data.userType, userRole });
+    }, []);
+
+    // Merge partial updates into the current user object (useful for loyalty point updates)
+    const updateUser = useCallback((patch) => {
+        setAuthState(prev => ({ ...prev, user: { ...(prev.user || {}), ...patch } }));
     }, []);
     const logout = useCallback(() => {
         localStorage.removeItem('auth_token'); localStorage.removeItem('user_type'); localStorage.removeItem('user_role');

@@ -55,13 +55,22 @@ const createOrder = asyncHandler(async (req, res) => {
     });
 
     // --- LOYALTY POINT INTEGRATION ---
+    // Only award points when there is a meaningful amount to convert into points.
     let loyaltyUpdateMessage = null;
+    let loyaltyResponse = null;
 
     try {
         const pointsEarned = Math.floor(totalAmount * POINTS_PER_UGX);
-        customer.loyaltyPoints += pointsEarned;
-        await customer.save();
-        loyaltyUpdateMessage = `Successfully added ${pointsEarned} points to ${customer.name}. New total: ${customer.loyaltyPoints}`;
+        if (pointsEarned > 0) {
+            customer.loyaltyPoints = (customer.loyaltyPoints || 0) + pointsEarned;
+            await customer.save();
+            loyaltyUpdateMessage = `Added ${pointsEarned} points. New total: ${customer.loyaltyPoints}`;
+            loyaltyResponse = { pointsEarned, totalPoints: customer.loyaltyPoints };
+        } else {
+            // Do not record or display zero-point updates
+            loyaltyUpdateMessage = null;
+            loyaltyResponse = null;
+        }
     } catch (error) {
         console.error("Loyalty update failed:", error.message);
         loyaltyUpdateMessage = "Order placed, but loyalty update failed due to a server error.";
@@ -69,6 +78,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
     res.status(201).json({
         order,
+        loyalty: loyaltyResponse,
         loyaltyUpdate: loyaltyUpdateMessage
     });
 });
