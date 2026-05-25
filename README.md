@@ -1,3 +1,3 @@
 # Lucky Foods
 
-Monorepo containing backend (Express/MongoDB) and frontend (Vite + React) for Lucky Foods.
+Monorepo containing backend (Express/MongoDB) and frontend (Vite + React) for Lucky Foods...
