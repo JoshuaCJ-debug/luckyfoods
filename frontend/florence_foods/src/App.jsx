@@ -384,6 +384,8 @@ const CheckoutScreen = ({ token, onBack }) => {
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
     const [progress, setProgress] = useState(0);
+    // Preserve the paid amount so clearing the cart doesn't reset the displayed paid total
+    const [paidAmount, setPaidAmount] = useState(null);
 
     useEffect(() => {
         if (step === 'processing') {
@@ -434,7 +436,7 @@ const CheckoutScreen = ({ token, onBack }) => {
                 </div>
                 <div className="p-6 space-y-3">
                     <div className="bg-green-50 rounded-lg p-4 text-center">
-                        <p className="text-3xl font-bold text-green-700">UGX {totalAmount.toLocaleString()}</p>
+                        <p className="text-3xl font-bold text-green-700">UGX {(paidAmount ?? totalAmount).toLocaleString()}</p>
                         <p className="text-sm text-gray-600">Paid</p>
                     </div>
                     {result && (
