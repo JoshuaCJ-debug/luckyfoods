@@ -54,10 +54,84 @@ const CartToast = ({ toast, onViewCart }) => {
     );
 };
 
+// ─── FLY TO CART ANIMATION COMPONENT ─────────────────────
+const FlyToCartAnimation = ({ startPos, endPos, image, onComplete }) => {
+    useEffect(() => {
+        // Create flying element
+        const flyer = document.createElement('div');
+        flyer.style.cssText = `
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            left: ${startPos.x}px;
+            top: ${startPos.y}px;
+        `;
+
+        const img = document.createElement('img');
+        img.src = image;
+        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+        flyer.appendChild(img);
+        document.body.appendChild(flyer);
+
+        // Calculate animation parameters
+        const deltaX = endPos.x - startPos.x;
+        const deltaY = endPos.y - startPos.y;
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        const duration = Math.min(800, Math.max(400, distance / 2));
+
+        // Animate using Web Animations API
+        const keyframes = [
+            { 
+                left: `${startPos.x}px`, 
+                top: `${startPos.y}px`, 
+                opacity: 1, 
+                transform: 'scale(1) rotate(0deg)' 
+            },
+            { 
+                left: `${startPos.x + deltaX * 0.3}px`, 
+                top: `${startPos.y + deltaY * 0.3 - 100}px`,
+                opacity: 1, 
+                transform: 'scale(0.8) rotate(-15deg)' 
+            },
+            { 
+                left: `${startPos.x + deltaX * 0.7}px`, 
+                top: `${startPos.y + deltaY * 0.7 - 50}px`,
+                opacity: 0.8, 
+                transform: 'scale(0.6) rotate(-30deg)' 
+            },
+            { 
+                left: `${endPos.x}px`, 
+                top: `${endPos.y}px`, 
+                opacity: 0, 
+                transform: 'scale(0.1) rotate(-45deg)' 
+            }
+        ];
+
+        flyer.animate(keyframes, {
+            duration: duration,
+            easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            fill: 'forwards'
+        }).onfinish = () => {
+            flyer.remove();
+            if (onComplete) onComplete();
+        };
+
+        return () => flyer.remove();
+    }, [startPos, endPos, image, onComplete]);
+
+    return null;
+};
+
 // ─── CART PROVIDER (persists across auth changes) ───────
 const CartProvider = ({ children }) => {
     const [cart, setCart] = useState({});
     const [toast, setToast] = useState(null);
+    const [flyingItem, setFlyingItem] = useState(null);
 
     const updateCart = useCallback((item, delta) => {
         setCart(prev => {
@@ -71,10 +145,55 @@ const CartProvider = ({ children }) => {
         });
     }, []);
 
-    const addToCart = useCallback((item) => {
-        updateCart(item, 1);
-        setToast({ message: `${item.name} added to cart`, type: 'success' });
-        setTimeout(() => setToast(null), 3000);
+    const addToCart = useCallback((item, startElement = null) => {
+        if (startElement && item.image) {
+            // Get start position from the clicked element
+            const rect = startElement.getBoundingClientRect();
+            const startPos = {
+                x: rect.left + rect.width / 2 - 30,
+                y: rect.top + rect.height / 2 - 30
+            };
+
+            // Get cart icon position (prefer nav cart, fallback to floating button)
+            const navCart = document.querySelector('nav button[title="View Cart"]');
+            const floatingCart = document.querySelector('button[title="View Cart"]:not(nav button)');
+            const cartElement = navCart || floatingCart;
+            
+            if (cartElement) {
+                const cartRect = cartElement.getBoundingClientRect();
+                const endPos = {
+                    x: cartRect.left + cartRect.width / 2 - 30,
+                    y: cartRect.top + cartRect.height / 2 - 30
+                };
+
+                // Set flying item to trigger animation
+                setFlyingItem({
+                    startPos,
+                    endPos,
+                    image: item.image.startsWith('http') ? item.image : `/images/menu/${item.image}`,
+                    itemId: item._id
+                });
+
+                // Add to cart after animation starts
+                setTimeout(() => {
+                    updateCart(item, 1);
+                    setToast({ message: `${item.name} added to cart`, type: 'success' });
+                    setTimeout(() => setToast(null), 3000);
+                }, 200);
+
+                // Clear flying item after animation
+                setTimeout(() => setFlyingItem(null), 800);
+            } else {
+                // Fallback if no cart found
+                updateCart(item, 1);
+                setToast({ message: `${item.name} added to cart`, type: 'success' });
+                setTimeout(() => setToast(null), 3000);
+            }
+        } else {
+            updateCart(item, 1);
+            setToast({ message: `${item.name} added to cart`, type: 'success' });
+            setTimeout(() => setToast(null), 3000);
+        }
     }, [updateCart]);
 
     const clearCart = useCallback(() => setCart({}), []);
@@ -83,7 +202,23 @@ const CartProvider = ({ children }) => {
     const totalItems = useMemo(() => cartArray.reduce((s, i) => s + i.quantity, 0), [cartArray]);
     const totalAmount = useMemo(() => cartArray.reduce((s, i) => s + i.orderPrice * i.quantity, 0), [cartArray]);
 
-    return <CartContext.Provider value={{ cart, cartArray, totalItems, totalAmount, updateCart, addToCart, clearCart, toast, setToast }}>{children}</CartContext.Provider>;
+    return (
+        <CartContext.Provider value={{ 
+            cart, 
+            cartArray, 
+            totalItems, 
+            totalAmount, 
+            updateCart, 
+            addToCart, 
+            clearCart, 
+            toast, 
+            setToast,
+            flyingItem,
+            setFlyingItem
+        }}>
+            {children}
+        </CartContext.Provider>
+    );
 };
 
 // ─── AUTH MODAL (inline login/register without page change) ──
@@ -215,16 +350,11 @@ const Navigation = ({ activeView, setActiveView, onCartClick, onOpenAuth }) => {
                     <h1 className="text-3xl font-black text-white tracking-wider cursor-pointer" onClick={() => setActiveView(isStaff ? 'staff_pos' : 'customer_order')}>LUCKY FOODS</h1>
                     <span className="text-green-200 text-sm font-medium">{isStaff ? userRole?.toUpperCase() : ''}</span>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3">
                     {allItems.map(item => (
                         <NavItem key={item.view} name={item.name} active={activeView === item.view} onClick={() => setActiveView(item.view)} icon={item.icon} />
                     ))}
-                    {!isStaff && isAuthenticated && (
-                        <span className="text-green-200 text-sm font-medium flex items-center cursor-default">
-                            <svg className="w-4 h-4 mr-1 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                            {user?.name || user?.email}
-                        </span>
-                    )}
+                    {/* Cart icon - separate from user group */}
                     {(activeView === 'customer_order' || !isAuthenticated) && (
                         <button onClick={onCartClick} className="relative p-2 text-white hover:bg-green-800 rounded-full transition-all" title="View Cart">
                             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
@@ -233,15 +363,26 @@ const Navigation = ({ activeView, setActiveView, onCartClick, onOpenAuth }) => {
                             )}
                         </button>
                     )}
-                    {isAuthenticated && (
-                        <button onClick={logout} className="px-3 py-1.5 text-sm font-semibold rounded-full text-white bg-red-500 hover:bg-red-600 transition shadow">Logout</button>
-                    )}
-                    {!isStaff && !isAuthenticated && (
-                        <button onClick={onOpenAuth} className="text-green-200 hover:text-white text-sm font-medium flex items-center transition">
-                            <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
-                            Sign In
-                        </button>
-                    )}
+                    {/* User group - name, logout/signin - separated visually */}
+                    <div className="flex items-center space-x-2 ml-2 pl-2 border-l border-green-600">
+                        {!isStaff && isAuthenticated && (
+                            <span className="text-green-200 text-sm font-medium flex items-center cursor-default">
+                                <svg className="w-4 h-4 mr-1 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                {user?.name || user?.email}
+                            </span>
+                        )}
+                        {isAuthenticated && (
+                            <button onClick={logout} className="px-3 py-1.5 text-sm font-semibold rounded-full text-white bg-red-500 hover:bg-red-600 transition shadow ml-1" title="Sign out">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                            </button>
+                        )}
+                        {!isStaff && !isAuthenticated && (
+                            <button onClick={onOpenAuth} className="text-green-200 hover:text-white text-sm font-medium flex items-center transition">
+                                <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
+                                Sign In
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </nav>
@@ -312,6 +453,7 @@ const MenuView = ({ onAddToCart }) => {
     const [error, setError] = useState(null);
     const [search, setSearch] = useState('');
     const [activeCategory, setActiveCategory] = useState('All');
+    const buttonRefs = useRef({});
 
     useEffect(() => {
         const fetchMenu = async () => {
@@ -328,6 +470,10 @@ const MenuView = ({ onAddToCart }) => {
         };
         fetchMenu();
     }, []);
+
+    const handleAddToCart = (item, button) => {
+        onAddToCart(item, button);
+    };
 
     if (loading) return <Loader message="Loading Menu..." />;
     if (error) return <Alert message={error} type="error" />;
@@ -368,7 +514,7 @@ const MenuView = ({ onAddToCart }) => {
                             return (
                                 <div key={item._id} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border hover:border-green-300 group">
                                     {item.image && (
-                                        <div className="h-40 overflow-hidden">
+                                        <div className="h-40 overflow-hidden cursor-pointer" onClick={(e) => handleAddToCart(item, e.currentTarget)}>
                                             <img src={item.image.startsWith('http') ? item.image : `/images/menu/${item.image}`} alt={item.name}
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                 onError={e => e.target.style.display = 'none'} />
@@ -380,8 +526,9 @@ const MenuView = ({ onAddToCart }) => {
                                             <span className="text-green-700 font-bold whitespace-nowrap ml-2">{priceDisplay}</span>
                                         </div>
                                         {item.description && <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>}
-                                        <button onClick={() => onAddToCart(item)}
-                                            className="w-full py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow">
+                                        <button onClick={(e) => handleAddToCart(item, e.currentTarget)}
+                                            className="w-full py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow"
+                                            data-item-id={item._id}>
                                             + Add to Cart
                                         </button>
                                     </div>
@@ -609,18 +756,28 @@ const OrdersView = ({ token, isStaff }) => {
                 <h3 className="text-2xl font-bold text-gray-800">{isStaff ? 'Orders' : 'My Orders'}</h3>
                 <select value={filter} onChange={e => setFilter(e.target.value)} className="p-2 border rounded text-sm">{['All','Pending','Preparing','Ready','Completed','Cancelled'].map(s => <option key={s} value={s}>{s}</option>)}</select>
             </div>
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-xl overflow-hidden border border-gray-200">
                 <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50"><tr><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">ID</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Customer</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Items</th><th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Total</th><th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th></tr></thead>
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-4 py-3 text-left text-sm font-bold text-gray-700 uppercase tracking-wide">Order ID</th>
+                            <th className="px-4 py-3 text-left text-sm font-bold text-gray-700 uppercase tracking-wide">Customer</th>
+                            <th className="px-4 py-3 text-left text-sm font-bold text-gray-700 uppercase tracking-wide">Items</th>
+                            <th className="px-4 py-3 text-left text-sm font-bold text-gray-700 uppercase tracking-wide">Total</th>
+                            <th className="px-4 py-3 text-center text-sm font-bold text-gray-700 uppercase tracking-wide">Status</th>
+                        </tr>
+                    </thead>
                     <tbody className="divide-y divide-gray-200">
-                        {filtered.length === 0 ? <tr><td colSpan="5" className="text-center py-8 text-gray-500">No orders</td></tr> : (
+                        {filtered.length === 0 ? (
+                            <tr><td colSpan="5" className="text-center py-12 text-gray-500 text-lg">No orders found</td></tr>
+                        ) : (
                             filtered.map(order => (
-                                <tr key={order._id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3 font-bold text-green-600 text-sm">#{order._id.slice(-6)}</td>
-                                    <td className="px-4 py-3 font-semibold text-sm">{order.customerName}</td>
-                                    <td className="px-4 py-3 text-sm">{order.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
-                                    <td className="px-4 py-3 font-bold text-sm">UGX {(order.totalAmount||0).toLocaleString()}</td>
-                                    <td className="px-4 py-3 text-center"><span className={`px-2 py-1 text-xs font-bold rounded-full ${sc[order.status]||'bg-gray-200'}`}>{order.status}</span></td>
+                                <tr key={order._id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-4 py-4 font-bold text-green-700 text-base">#{order._id.slice(-6).toUpperCase()}</td>
+                                    <td className="px-4 py-4 font-semibold text-base text-gray-800">{order.customerName}</td>
+                                    <td className="px-4 py-4 text-base text-gray-700">{order.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
+                                    <td className="px-4 py-4 font-bold text-base text-gray-900">UGX {(order.totalAmount||0).toLocaleString()}</td>
+                                    <td className="px-4 py-4 text-center"><span className={`px-3 py-1.5 text-sm font-bold rounded-full ${sc[order.status]||'bg-gray-200 text-gray-700'}`}>{order.status}</span></td>
                                 </tr>
                             ))
                         )}
@@ -632,17 +789,90 @@ const OrdersView = ({ token, isStaff }) => {
 };
 
 // ─── PROFILE ────────────────────────────────────────────
-const ProfileView = ({ user }) => (
-    <div className="p-8 max-w-lg mx-auto animate-premium-transition">
-        <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-2xl font-bold text-green-700 mb-4">My Profile</h3>
-            <p className="text-lg font-semibold">Name: <span className="font-bold">{user?.name}</span></p>
-            <p className="text-lg font-semibold">Email: <span className="font-bold">{user?.email}</span></p>
-            {user?.phone && <p className="text-lg font-semibold">Phone: <span className="font-bold">{user.phone}</span></p>}
-            <p className="text-2xl font-black mt-4 text-green-600">Loyalty Points: {user?.loyaltyPoints || 0}</p>
+const ProfileView = ({ user }) => {
+    const points = user?.loyaltyPoints || 0;
+    const nextReward = Math.ceil((points + 1) / 100) * 100;
+    const progress = ((points % 100) / 100) * 100;
+    const totalSpent = points * 10; // Assuming 1 point per 10 UGX spent
+
+    return (
+        <div className="p-4 md:p-8 max-w-4xl mx-auto animate-premium-transition">
+            <div className="mb-6">
+                <h2 className="text-3xl font-bold text-gray-800">My Profile</h2>
+                <p className="text-gray-600">Manage your account and rewards</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Loyalty Card */}
+                <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16"></div>
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-green-200 text-sm font-medium">LOYALTY MEMBER</span>
+                            <svg className="w-8 h-8 text-green-300" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                        </div>
+                        <p className="text-4xl font-black mb-2">{points.toLocaleString()}</p>
+                        <p className="text-green-200 text-sm mb-4">Available Points</p>
+                        <div className="bg-green-900 bg-opacity-30 rounded-full h-2 mb-2">
+                            <div className="bg-yellow-400 h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
+                        </div>
+                        <p className="text-xs text-green-200">{100 - (points % 100)} points until next reward!</p>
+                    </div>
+                </div>
+
+                {/* Account Info */}
+                <div className="bg-white rounded-xl p-6 border border-gray-200">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        Account Details
+                    </h3>
+                    <div className="space-y-3">
+                        <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wider">Full Name</p>
+                            <p className="font-semibold text-gray-800">{user?.name || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wider">Email</p>
+                            <p className="font-semibold text-gray-800">{user?.email || 'N/A'}</p>
+                        </div>
+                        {user?.phone && (
+                            <div>
+                                <p className="text-xs text-gray-500 uppercase tracking-wider">Phone</p>
+                                <p className="font-semibold text-gray-800">{user.phone}</p>
+                            </div>
+                        )}
+                        <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wider">Estimated Total Spent</p>
+                            <p className="font-semibold text-green-600">UGX {totalSpent.toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Rewards Info */}
+            <div className="bg-white rounded-xl p-6 border border-gray-200">
+                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13l0-5m0-5l-3 3m3-3l3 3M20 12a8 8 0 11-16 0 8 8 0 0116 0z" /></svg>
+                    How Loyalty Points Work
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+                        <div className="text-2xl font-bold text-green-700 mb-1">Earn</div>
+                        <p className="text-sm text-gray-600">Get 1 point for every 10 UGX spent on orders</p>
+                    </div>
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+                        <div className="text-2xl font-bold text-green-700 mb-1">Redeem</div>
+                        <p className="text-sm text-gray-600">Use 100 points for UGX 1,000 off your next order</p>
+                    </div>
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+                        <div className="text-2xl font-bold text-green-700 mb-1">Benefits</div>
+                        <p className="text-sm text-gray-600">Exclusive deals and early access to new menu items</p>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // ─── MANAGER DASHBOARD ──────────────────────────────────
 const ManagerView = ({ token }) => {
@@ -741,10 +971,13 @@ const AppRouter = () => {
         }
     };
 
+    // Get flying item from cart context for animation
+    const { flyingItem } = useCart();
+
     const renderView = () => {
         // Public menu view — no auth needed
         if (activeView === 'customer_order' && !showCheckout) {
-            return <CartContext.Consumer>{({ updateCart }) => <MenuView onAddToCart={(item) => updateCart(item, 1)} />}</CartContext.Consumer>;
+            return <CartContext.Consumer>{({ addToCart }) => <MenuView onAddToCart={addToCart} />}</CartContext.Consumer>;
         }
 
         // Checkout — requires auth (checked via handleCheckoutAction)
@@ -768,11 +1001,11 @@ const AppRouter = () => {
             switch (activeView) {
                 case 'customer_history': return <OrdersView token={token} isStaff={false} />;
                 case 'customer_profile': return <ProfileView user={user} />;
-                default: return <CartContext.Consumer>{({ updateCart }) => <MenuView onAddToCart={(item) => updateCart(item, 1)} />}</CartContext.Consumer>;
+                default: return <CartContext.Consumer>{({ addToCart }) => <MenuView onAddToCart={addToCart} />}</CartContext.Consumer>;
             }
         }
 
-        return <CartContext.Consumer>{({ updateCart }) => <MenuView onAddToCart={(item) => updateCart(item, 1)} />}</CartContext.Consumer>;
+        return <CartContext.Consumer>{({ addToCart }) => <MenuView onAddToCart={addToCart} />}</CartContext.Consumer>;
     };
 
     return (
@@ -783,6 +1016,14 @@ const AppRouter = () => {
             </main>
             <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} onCheckout={handleCheckoutAction} />
             <AuthModal isOpen={showAuth} onClose={() => { setShowAuth(false); pendingCheckout.current = false; }} onAuthSuccess={handleAuthSuccess} />
+            {/* Flying item animation */}
+            {flyingItem && (
+                <FlyToCartAnimation
+                    startPos={flyingItem.startPos}
+                    endPos={flyingItem.endPos}
+                    image={flyingItem.image}
+                />
+            )}
             <CartContext.Consumer>
                 {({ totalItems }) => totalItems > 0 && (
                     <button onClick={() => setCartOpen(true)} className="fixed bottom-6 right-6 bg-green-600 text-white p-4 rounded-full shadow-xl hover:bg-green-700 transition-all transform hover:scale-110 active:scale-95 z-40" title="View Cart">
