@@ -362,7 +362,7 @@ const Navigation = ({ activeView, setActiveView, onCartClick, onOpenAuth }) => {
         <nav className="bg-green-700 px-2 py-2 sm:p-3 shadow-xl z-50 relative">
             <div className="max-w-7xl mx-auto flex justify-between items-center gap-2">
                 <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
-                    <h1 className="text-lg sm:text-3xl font-black text-white tracking-wider cursor-pointer whitespace-nowrap" onClick={() => setActiveView(isStaff ? 'staff_pos' : 'customer_order')}>LUCKY FOODS</h1>
+                    <h1 className="text-lg sm:text-3xl text-white cursor-pointer whitespace-nowrap" style={{ fontFamily: "'Archivo Black', 'Inter', sans-serif", letterSpacing: '0.02em' }} onClick={() => setActiveView(isStaff ? 'staff_pos' : 'customer_order')}>LUCKY FOODS</h1>
                     <span className="hidden sm:inline text-green-200 text-sm font-medium">{isStaff ? userRole?.toUpperCase() : ''}</span>
                 </div>
                 <div className="flex items-center space-x-1 sm:space-x-3">
