@@ -14,12 +14,17 @@ import orderRoutes from './routes/orderRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
 import { isProduction, isLocalDev, getEnvironmentLabel } from './config/env.js';
+import healthRoutes from './routes/healthRoutes.js';
 
 //load the environment varriable from .env file
 dotenv.config();
 
 //initialize the express object using the app varriable constant 
 const app = express();
+
+// Trust the first proxy (Render, Nginx, etc.) so rate-limit reads the real client IP
+// from X-Forwarded-For instead of the proxy's IP. Required for express-rate-limit v8+.
+app.set('trust proxy', 1);
 
 // ─── CORS Configuration ─────────────────────────────────
 const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:3000')
@@ -215,6 +220,9 @@ process.on('SIGTERM', async () => {
 app.get('/', (req, res) => {
   res.send('Florence Foods API is running securely! 🛡️');
 });
+
+// Health check — must be before /api rate limiter so uptime monitors bypass it
+app.use('/health', healthRoutes);
 
 // API Routes
 app.use('/api/auth', authRoutes); // Unified authentication
