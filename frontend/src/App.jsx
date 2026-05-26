@@ -309,8 +309,23 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
 
 // ─── NAVIGATION ─────────────────────────────────────────
 const NavItem = ({ name, active, onClick, icon }) => (
-    <button onClick={onClick} className={`px-4 py-2 text-base font-semibold rounded-full transition-all duration-300 hover:scale-105 active:scale-95 flex items-center space-x-1 ${active ? 'bg-green-600 text-white shadow-sm' : 'text-gray-200 hover:bg-green-800'}`}>
-        {icon && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>}
+    <button
+        onClick={onClick}
+        className={[
+            'flex items-center space-x-1 font-semibold transition-colors duration-200',
+            // Mobile: flat, minimal, no pill background, no scale, thin underline when active
+            'px-1.5 py-1 text-xs border-b-2',
+            active
+                ? 'border-white text-white'
+                : 'border-transparent text-green-100 hover:text-white',
+            // Desktop (sm+): restore the original pill button look
+            'sm:px-4 sm:py-2 sm:text-base sm:rounded-full sm:border-b-0 sm:border-0 sm:transition-all sm:duration-300 sm:hover:scale-105 sm:active:scale-95',
+            active
+                ? 'sm:bg-green-600 sm:text-white sm:shadow-sm'
+                : 'sm:text-gray-200 sm:hover:bg-green-800 sm:hover:text-gray-200',
+        ].join(' ')}
+    >
+        {icon && <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>}
         <span>{name}</span>
     </button>
 );
@@ -344,13 +359,13 @@ const Navigation = ({ activeView, setActiveView, onCartClick, onOpenAuth }) => {
     const allItems = isStaff ? navItems : [...navItems, ...customerExtra];
 
     return (
-        <nav className="bg-green-700 p-3 shadow-xl z-50 relative">
-            <div className="max-w-7xl mx-auto flex justify-between items-center">
-                <div className="flex items-center space-x-4 flex-1">
-                    <h1 className="text-3xl font-black text-white tracking-wider cursor-pointer" onClick={() => setActiveView(isStaff ? 'staff_pos' : 'customer_order')}>LUCKY FOODS</h1>
-                    <span className="text-green-200 text-sm font-medium">{isStaff ? userRole?.toUpperCase() : ''}</span>
+        <nav className="bg-green-700 px-2 py-2 sm:p-3 shadow-xl z-50 relative">
+            <div className="max-w-7xl mx-auto flex justify-between items-center gap-2">
+                <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+                    <h1 className="text-lg sm:text-3xl font-black text-white tracking-wider cursor-pointer whitespace-nowrap" onClick={() => setActiveView(isStaff ? 'staff_pos' : 'customer_order')}>LUCKY FOODS</h1>
+                    <span className="hidden sm:inline text-green-200 text-sm font-medium">{isStaff ? userRole?.toUpperCase() : ''}</span>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-1 sm:space-x-3">
                     {allItems.map(item => (
                         <NavItem key={item.view} name={item.name} active={activeView === item.view} onClick={() => setActiveView(item.view)} icon={item.icon} />
                     ))}
@@ -364,7 +379,7 @@ const Navigation = ({ activeView, setActiveView, onCartClick, onOpenAuth }) => {
                         </button>
                     )}
                     {/* User group - name, logout/signin - separated visually */}
-                    <div className="flex items-center space-x-2 ml-2 pl-2 border-l border-green-600">
+                    <div className="flex items-center space-x-1 sm:space-x-2 sm:ml-2 sm:pl-2 sm:border-l border-green-600">
                         {!isStaff && isAuthenticated && (
                             <span className="text-green-200 text-sm font-medium flex items-center cursor-default">
                                 <svg className="w-4 h-4 mr-1 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
