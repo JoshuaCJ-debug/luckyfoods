@@ -45,4 +45,8 @@ WiredTiger.lock
 *.tmp
 *.bak
 
+# Package locks — too large for repo, CI generates them
+package-lock.json
+**/package-lock.json
+
 #
