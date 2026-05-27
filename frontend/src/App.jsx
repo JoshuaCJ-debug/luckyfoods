@@ -1032,7 +1032,7 @@ const AppRouter = () => {
                         {activeView === 'customer_order' && (
                             <aside className="hidden xl:block absolute right-0 w-80 top-[126px] bottom-[56px] z-10 bg-gradient-to-br from-green-700 to-green-800 rounded-l-2xl shadow-2xl overflow-hidden">
                             {/* Decorative semi-transparent rings */}
-                            <div className="absolute -top-12 -right-10 w-48 h-48 border-2 border-white/10 rounded-full pointer-events-none" />
+                            <div className="absolute -top-24 -right-16 w-40 h-40 border-2 border-white/10 rounded-full pointer-events-none" />
                             <div className="absolute top-1/3 -left-8 w-36 h-36 border-2 border-white/10 rounded-full pointer-events-none" />
                             <div className="absolute top-1/2 right-2 w-14 h-14 border-2 border-white/5 rounded-full pointer-events-none" />
                             <div className="absolute top-[55%] left-10 w-8 h-8 border border-white/5 rounded-full pointer-events-none" />
@@ -1043,10 +1043,15 @@ const AppRouter = () => {
 
                             <div className="p-6 text-white flex flex-col items-center text-center">
                                 {/* Zone 1: The Hook */}
-                                <svg className="w-12 h-12 text-green-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l4.5 4.5M21 3l-4.5 4.5" />
-                                </svg>
+                                <div className="w-16 h-16 rounded-full bg-green-800/50 border-2 border-green-400/30 flex items-center justify-center mb-4 shadow-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" className="w-10 h-10">
+                                        <rect width="64" height="64" rx="12" fill="#15803d" />
+                                        <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central"
+                                            fontFamily="'Archivo Black', 'Arial Black', sans-serif"
+                                            fontWeight="900" fontSize="34" fill="#ffffff"
+                                            letterSpacing="-1">LF</text>
+                                    </svg>
+                                </div>
                                 <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Archivo Black', sans-serif" }}>Welcome to<br />LUCKY FOODS!</h2>
                                 <p className="text-sm text-white/85 leading-relaxed mb-12">
                                     Discover our delicious menu crafted with love. Browse dishes, salads, and drinks.
