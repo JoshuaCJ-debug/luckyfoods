@@ -358,18 +358,28 @@ const Navigation = ({ activeView, setActiveView, onCartClick, onOpenAuth }) => {
 
     const allItems = isStaff ? navItems : [...navItems, ...customerExtra];
 
+    const [mobileOpen, setMobileOpen] = useState(false);
+
     return (
         <nav className="bg-green-700 px-2 py-2 sm:p-3 shadow-xl z-50 relative">
             <div className="max-w-7xl mx-auto flex justify-between items-center gap-2">
                 <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+                    <button onClick={() => setMobileOpen(true)} className="sm:hidden p-1.5 text-white hover:bg-green-800 rounded-lg transition">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    </button>
                     <h1 className="text-lg sm:text-3xl text-white cursor-pointer whitespace-nowrap" style={{ fontFamily: "'Archivo Black', 'Inter', sans-serif", letterSpacing: '0.02em' }} onClick={() => setActiveView(isStaff ? 'staff_pos' : 'customer_order')}>LUCKY FOODS</h1>
                     <span className="hidden sm:inline text-green-200 text-sm font-medium">{isStaff ? userRole?.toUpperCase() : ''}</span>
                 </div>
-                <div className="flex items-center space-x-1 sm:space-x-3">
+
+                {/* Desktop nav items */}
+                <div className="hidden sm:flex items-center space-x-1 sm:space-x-3">
                     {allItems.map(item => (
                         <NavItem key={item.view} name={item.name} active={activeView === item.view} onClick={() => setActiveView(item.view)} icon={item.icon} />
                     ))}
-                    {/* Cart icon - separate from user group */}
+                </div>
+
+                {/* Right section - cart + desktop user controls */}
+                <div className="flex items-center space-x-1 sm:space-x-2">
                     {(activeView === 'customer_order' || !isAuthenticated) && (
                         <button onClick={onCartClick} className="relative p-2 text-white hover:bg-green-800 rounded-full transition-all" title="View Cart">
                             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
@@ -378,8 +388,7 @@ const Navigation = ({ activeView, setActiveView, onCartClick, onOpenAuth }) => {
                             )}
                         </button>
                     )}
-                    {/* User group - name, logout/signin - separated visually */}
-                    <div className="flex items-center space-x-1 sm:space-x-2 sm:ml-2 sm:pl-2 sm:border-l border-green-600">
+                    <div className="hidden sm:flex items-center space-x-1 sm:space-x-2 sm:ml-2 sm:pl-2 sm:border-l border-green-600">
                         {!isStaff && isAuthenticated && (
                             <span className="text-green-200 text-sm font-medium flex items-center cursor-default">
                                 <svg className="w-4 h-4 mr-1 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
@@ -400,6 +409,45 @@ const Navigation = ({ activeView, setActiveView, onCartClick, onOpenAuth }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Mobile drawer */}
+            {mobileOpen && (
+                <div className="fixed inset-0 z-50 sm:hidden">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+                    <div className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-2xl flex flex-col">
+                        <div className="flex items-center justify-between p-4 border-b bg-green-700 text-white">
+                            <span className="font-bold text-lg" style={{ fontFamily: "'Archivo Black', sans-serif" }}>LUCKY FOODS</span>
+                            <button onClick={() => setMobileOpen(false)} className="text-white hover:text-green-200 text-2xl leading-none">&times;</button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 space-y-1">
+                            {allItems.map(item => (
+                                <button key={item.view} onClick={() => { setActiveView(item.view); setMobileOpen(false); }}
+                                    className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition text-sm ${activeView === item.view ? 'bg-green-700 text-white shadow' : 'text-gray-700 hover:bg-green-50'}`}>
+                                    {item.name}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="border-t p-4 space-y-3">
+                            {!isStaff && isAuthenticated && (
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                    {user?.name || user?.email}
+                                </div>
+                            )}
+                            {isAuthenticated && (
+                                <button onClick={() => { logout(); setMobileOpen(false); }} className="w-full px-4 py-2.5 text-sm font-semibold rounded-lg text-white bg-red-500 hover:bg-red-600 transition text-center">
+                                    Sign Out
+                                </button>
+                            )}
+                            {!isStaff && !isAuthenticated && (
+                                <button onClick={() => { onOpenAuth(); setMobileOpen(false); }} className="w-full px-4 py-2.5 text-sm font-semibold rounded-lg text-white bg-green-600 hover:bg-green-700 transition text-center">
+                                    Sign In
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </nav>
     );
 };
@@ -511,13 +559,18 @@ const MenuView = ({ onAddToCart }) => {
                 <div className="flex space-x-3 overflow-x-auto pb-2 md:pb-0">
                     {categories.map(cat => (
                         <button key={cat} onClick={() => setActiveCategory(cat)}
-                            className={`px-4 py-2 rounded-full text-sm font-semibold transition whitespace-nowrap ${activeCategory === cat ? 'bg-green-700 text-white shadow' : 'bg-white text-gray-700 hover:bg-green-50 border'}`}>
+                            className={`px-4 py-2 rounded-full text-sm font-semibold transition whitespace-nowrap ${activeCategory === cat ? 'bg-green-700 text-white shadow' : 'bg-white text-gray-500 hover:bg-green-50 border border-gray-300'}`}>
                             {cat}
                         </button>
                     ))}
                 </div>
-                <input type="text" placeholder="Search menu..." value={search} onChange={e => setSearch(e.target.value)}
-                    className="w-full md:w-72 xl:mr-[352px] px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" />
+                <div className="relative w-full md:w-72 xl:mr-[352px]">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+                    </svg>
+                    <input type="text" placeholder="Search menu..." value={search} onChange={e => setSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" />
+                </div>
             </div>
 
             {Object.entries(grouped).map(([category, items]) => (
@@ -527,11 +580,11 @@ const MenuView = ({ onAddToCart }) => {
                         {items.map(item => {
                             const priceDisplay = typeof item.price === 'object' ? `From UGX ${Object.values(item.price)[0]?.toLocaleString()}` : `UGX ${Number(item.price).toLocaleString()}`;
                             return (
-                                <div key={item._id} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border hover:border-green-300 group">
+                                <div key={item._id} className="bg-white rounded-xl shadow-sm hover:shadow-lg active:shadow-lg transition-all duration-300 overflow-hidden border hover:border-green-300 active:border-green-300 group">
                                     {item.image && (
                                         <div className="h-48 overflow-hidden cursor-pointer" onClick={(e) => handleAddToCart(item, e.currentTarget)}>
                                             <img src={item.image.startsWith('http') ? item.image : `/images/menu/${item.image}`} alt={item.name}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                className="w-full h-full object-cover group-hover:scale-105 group-active:scale-105 transition-transform duration-300"
                                                 onError={e => e.target.style.display = 'none'} />
                                         </div>
                                     )}
@@ -542,7 +595,7 @@ const MenuView = ({ onAddToCart }) => {
                                         </div>
                                         {item.description && <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>}
                                         <button onClick={(e) => handleAddToCart(item, e.currentTarget)}
-                                            className="w-full py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow"
+                                            className="w-full py-2 bg-green-600 hover:bg-green-700 active:bg-green-700 text-white font-semibold rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow"
                                             data-item-id={item._id}>
                                             + Add to Cart
                                         </button>
@@ -1043,16 +1096,13 @@ const AppRouter = () => {
 
                             <div className="p-6 text-white flex flex-col items-center text-center">
                                 {/* Zone 1: The Hook */}
-                                <div className="w-16 h-16 rounded-full bg-green-800/50 border-2 border-green-400/30 flex items-center justify-center mb-4 shadow-lg">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" className="w-10 h-10">
-                                        <rect width="64" height="64" rx="12" fill="#15803d" />
-                                        <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central"
-                                            fontFamily="'Archivo Black', 'Arial Black', sans-serif"
-                                            fontWeight="900" fontSize="34" fill="#ffffff"
-                                            letterSpacing="-1">LF</text>
-                                    </svg>
-                                </div>
-                                <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Archivo Black', sans-serif" }}>Welcome to<br />LUCKY FOODS!</h2>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" className="w-20 h-20 mb-4">
+                                    <text x="50%" y="52" text-anchor="middle"
+                                        fontFamily="'Archivo Black', 'Arial Black', system-ui, sans-serif"
+                                        fontWeight="900" fontSize="36" fill="#ffffff"
+                                        letterSpacing="-2">LF</text>
+                                </svg>
+                                <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Archivo Black', sans-serif" }}>Welcome</h2>
                                 <p className="text-sm text-white/85 leading-relaxed mb-12">
                                     Discover our delicious menu crafted with love. Browse dishes, salads, and drinks.
                                 </p>
