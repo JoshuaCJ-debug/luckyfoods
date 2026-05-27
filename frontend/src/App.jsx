@@ -2,12 +2,16 @@ import React, { useState, useEffect, useCallback, useMemo, createContext, useCon
 
 // ─── API ────────────────────────────────────────────────
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-const apiCall = async (endpoint, method = 'GET', data = null, token = null) => {
+const apiCall = async (endpoint, method = 'GET', data = null, token = null, timeoutMs = null) => {
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
+    const controller = timeoutMs ? new AbortController() : null;
+    const timeoutId = timeoutMs ? setTimeout(() => controller.abort(), timeoutMs) : null;
     const config = { method, headers, body: data ? JSON.stringify(data) : null };
+    if (controller) config.signal = controller.signal;
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, config);
+    let response;
+    try { response = await fetch(url, config); } finally { if (timeoutId) clearTimeout(timeoutId); }
     let result;
     try { result = await response.json(); } catch (e) { throw new Error(`API error: ${response.status}`); }
     if (!response.ok) throw new Error(result.message || `API failed: ${response.status}`);
@@ -516,22 +520,40 @@ const MenuView = ({ onAddToCart }) => {
     const [error, setError] = useState(null);
     const [search, setSearch] = useState('');
     const [activeCategory, setActiveCategory] = useState('All');
+    const [retrying, setRetrying] = useState(null);
     const buttonRefs = useRef({});
 
     useEffect(() => {
-        const fetchMenu = async () => {
-            try {
-                const result = await apiCall('/api/menu', 'GET');
-                const combined = [
-                    ...(result.dishes || []).map(d => ({ ...d, type: 'Dishes' })),
-                    ...(result.salads || []).map(d => ({ ...d, type: 'Salads' })),
-                    ...(result.drinks || []).map(d => ({ ...d, type: 'Drinks' })),
-                ];
-                setMenu(combined);
-            } catch (err) { setError(err.message); }
-            finally { setLoading(false); }
+        const fetchWithRetry = async () => {
+            const attempts = [
+                { timeout: 50000, delay: 0, label: 'Slow connection…' },
+                { timeout: 10000, delay: 0, label: 'Retrying…' },
+                { timeout: 30000, delay: 15000, label: 'Retrying…' },
+            ];
+            for (const attempt of attempts) {
+                if (attempt.delay) await new Promise(r => setTimeout(r, attempt.delay));
+                setRetrying(attempt.label);
+                try {
+                    const result = await apiCall('/api/menu', 'GET', null, null, attempt.timeout);
+                    const combined = [
+                        ...(result.dishes || []).map(d => ({ ...d, type: 'Dishes' })),
+                        ...(result.salads || []).map(d => ({ ...d, type: 'Salads' })),
+                        ...(result.drinks || []).map(d => ({ ...d, type: 'Drinks' })),
+                    ];
+                    setMenu(combined);
+                    setRetrying(null);
+                    setLoading(false);
+                    return;
+                } catch (err) {
+                    if (attempt === attempts[attempts.length - 1]) {
+                        setError(err.message);
+                        setRetrying(null);
+                        setLoading(false);
+                    }
+                }
+            }
         };
-        fetchMenu();
+        fetchWithRetry();
     }, []);
 
     const handleAddToCart = (item, button) => {
@@ -539,7 +561,17 @@ const MenuView = ({ onAddToCart }) => {
     };
 
     if (loading) return (
-        <div className="p-4 md:p-6 max-w-[1600px] mx-auto animate-pulse">
+        <div className="p-4 md:p-6 max-w-[1600px] mx-auto">
+            {retrying && (
+                <div className="flex items-center justify-center mb-4 text-sm text-gray-400">
+                    <svg className="animate-spin -ml-1 mr-2 h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    {retrying}
+                </div>
+            )}
+            <div className="animate-pulse">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-3 md:space-y-0 md:gap-8">
                 <div className="flex space-x-3">
                     {[1,2,3,4].map(i => <div key={i} className="h-9 w-20 bg-gray-200 rounded-full" />)}
@@ -564,6 +596,7 @@ const MenuView = ({ onAddToCart }) => {
                     </div>
                 </div>
             ))}
+            </div>
         </div>
     );
     if (error) return <Alert message={error} type="error" />;
