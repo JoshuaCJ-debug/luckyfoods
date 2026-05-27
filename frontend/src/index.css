@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-media --3xl (width >= 1792px);
+
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

@@ -506,9 +506,9 @@ const MenuView = ({ onAddToCart }) => {
     }, {});
 
     return (
-        <div className="p-4 md:p-6 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-3 md:space-y-0">
-                <div className="flex space-x-2 overflow-x-auto pb-2 md:pb-0">
+        <div className="p-4 md:p-6 max-w-[1600px] mx-auto">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-3 md:space-y-0 md:gap-8">
+                <div className="flex space-x-3 overflow-x-auto pb-2 md:pb-0">
                     {categories.map(cat => (
                         <button key={cat} onClick={() => setActiveCategory(cat)}
                             className={`px-4 py-2 rounded-full text-sm font-semibold transition whitespace-nowrap ${activeCategory === cat ? 'bg-green-700 text-white shadow' : 'bg-white text-gray-700 hover:bg-green-50 border'}`}>
@@ -517,25 +517,25 @@ const MenuView = ({ onAddToCart }) => {
                     ))}
                 </div>
                 <input type="text" placeholder="Search menu..." value={search} onChange={e => setSearch(e.target.value)}
-                    className="w-full md:w-64 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" />
+                    className="w-full md:w-72 xl:mr-[352px] px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" />
             </div>
 
             {Object.entries(grouped).map(([category, items]) => (
                 <div key={category} className="mb-8">
                     <h3 className="text-2xl font-bold text-gray-800 mb-4">{category}</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-6">
                         {items.map(item => {
                             const priceDisplay = typeof item.price === 'object' ? `From UGX ${Object.values(item.price)[0]?.toLocaleString()}` : `UGX ${Number(item.price).toLocaleString()}`;
                             return (
                                 <div key={item._id} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border hover:border-green-300 group">
                                     {item.image && (
-                                        <div className="h-40 overflow-hidden cursor-pointer" onClick={(e) => handleAddToCart(item, e.currentTarget)}>
+                                        <div className="h-48 overflow-hidden cursor-pointer" onClick={(e) => handleAddToCart(item, e.currentTarget)}>
                                             <img src={item.image.startsWith('http') ? item.image : `/images/menu/${item.image}`} alt={item.name}
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                 onError={e => e.target.style.display = 'none'} />
                                         </div>
                                     )}
-                                    <div className="p-4">
+                                    <div className="p-5">
                                         <div className="flex justify-between items-start mb-2">
                                             <h4 className="font-bold text-lg text-gray-900">{item.name}</h4>
                                             <span className="text-green-700 font-bold whitespace-nowrap ml-2">{priceDisplay}</span>
