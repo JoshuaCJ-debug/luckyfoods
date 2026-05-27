@@ -361,7 +361,7 @@ const Navigation = ({ activeView, setActiveView, onCartClick, onOpenAuth }) => {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     return (
-        <nav className="bg-green-700 px-2 py-2 sm:p-3 shadow-xl z-50 relative">
+        <nav className="bg-green-700 px-2 py-2 sm:p-3 shadow-xl z-50 relative animate-[nav-reveal_0.6s_ease-out]">
             <div className="max-w-7xl mx-auto flex justify-between items-center gap-2">
                 <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
                     <button onClick={() => setMobileOpen(true)} className="sm:hidden p-1.5 text-white hover:bg-green-800 rounded-lg transition">
@@ -460,7 +460,7 @@ const CartDrawer = ({ isOpen, onClose, onCheckout }) => {
     return (
         <>
             {isOpen && <div className="fixed inset-0 z-40 transition-opacity backdrop-blur-sm bg-black/40" onClick={onClose} />}
-            <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-gray-50 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                 <div className="flex flex-col h-full">
                     <div className="flex justify-between items-center p-4 border-b bg-green-700 text-white">
                         <h2 className="text-xl font-bold">Your Cart ({totalItems})</h2>
@@ -475,7 +475,7 @@ const CartDrawer = ({ isOpen, onClose, onCheckout }) => {
                             </div>
                         ) : (
                             cartArray.map(item => (
-                                <div key={item._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:shadow transition">
+                                <div key={item._id} className="flex items-center justify-between p-3 bg-white rounded-lg hover:shadow transition">
                                     <div className="flex-1 min-w-0">
                                         <p className="font-bold text-gray-900 truncate">{item.name}</p>
                                         <p className="text-sm text-gray-600">UGX {item.orderPrice.toLocaleString()} ea</p>
@@ -538,7 +538,34 @@ const MenuView = ({ onAddToCart }) => {
         onAddToCart(item, button);
     };
 
-    if (loading) return <Loader message="Loading Menu..." />;
+    if (loading) return (
+        <div className="p-4 md:p-6 max-w-[1600px] mx-auto animate-pulse">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-3 md:space-y-0 md:gap-8">
+                <div className="flex space-x-3">
+                    {[1,2,3,4].map(i => <div key={i} className="h-9 w-20 bg-gray-200 rounded-full" />)}
+                </div>
+                <div className="w-full md:w-72 h-9 bg-gray-200 rounded-full" />
+            </div>
+            {['Dishes', 'Salads', 'Drinks'].map(cat => (
+                <div key={cat} className="mb-8">
+                    <div className="h-7 w-28 bg-gray-200 rounded mb-4" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-6">
+                        {[1,2,3,4,5,6].map(i => (
+                            <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden">
+                                <div className="h-48 bg-gray-200" />
+                                <div className="p-5 space-y-3">
+                                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                                    <div className="h-3 bg-gray-200 rounded w-1/2" />
+                                    <div className="h-3 bg-gray-200 rounded w-full" />
+                                    <div className="h-9 bg-gray-200 rounded-lg" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
     if (error) return <Alert message={error} type="error" />;
 
     const categories = ['All', ...new Set(menu.map(m => m.type))];
@@ -611,7 +638,7 @@ const MenuView = ({ onAddToCart }) => {
 };
 
 // ─── CHECKOUT SCREEN ────────────────────────────────────
-const CheckoutScreen = ({ token, onBack }) => {
+const CheckoutScreen = ({ token, onBack, onViewOrders }) => {
     const { cartArray, totalItems, totalAmount, clearCart } = useCart();
     const { user, updateUser } = useAuth();
     const [step, setStep] = useState('review');
@@ -679,7 +706,13 @@ const CheckoutScreen = ({ token, onBack }) => {
                             {result.loyaltyUpdate && <div className="flex justify-between text-sm border-b pb-2"><span className="text-gray-600">Loyalty</span><span className="font-bold text-green-700">{result.loyaltyUpdate}</span></div>}
                         </>
                     )}
-                    <button onClick={onBack} className="w-full py-3 bg-green-700 hover:bg-green-800 text-white font-bold rounded-lg shadow transition">Back to Menu</button>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-600 text-center">
+                        We&rsquo;ll reach out to you later with delivery instructions.
+                    </div>
+                    <div className="flex gap-3">
+                        <button onClick={onBack} className="flex-1 py-3 bg-green-700 hover:bg-green-800 text-white font-bold rounded-lg shadow transition">Back to Menu</button>
+                        <button onClick={onViewOrders} className="flex-1 py-3 border-2 border-green-700 text-green-700 hover:bg-green-50 font-bold rounded-lg transition">See My Orders</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -709,7 +742,7 @@ const CheckoutScreen = ({ token, onBack }) => {
                     </div>
                     {error && <Alert message={error} type="error" onClose={() => setError(null)} />}
                     <button onClick={handlePay} className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-xl shadow-lg transition-all transform hover:scale-105 active:scale-95">Pay UGX {totalAmount.toLocaleString()}</button>
-                    <p className="text-xs text-center text-gray-400">💳 Simulated payment — no real charge</p>
+                    <p className="text-xs text-center text-gray-400">Simulated payment — no real charge</p>
                 </div>
             </div>
         </div>
@@ -1050,7 +1083,7 @@ const AppRouter = () => {
 
         // Checkout — requires auth (checked via handleCheckoutAction)
         if (showCheckout && isAuthenticated) {
-            return <CheckoutScreen token={token} onBack={() => setShowCheckout(false)} />;
+            return <CheckoutScreen token={token} onBack={() => setShowCheckout(false)} onViewOrders={() => { setShowCheckout(false); setActiveView('customer_history'); }} />;
         }
 
         // Staff views
@@ -1082,7 +1115,7 @@ const AppRouter = () => {
             <main className="flex-1 overflow-auto bg-gray-50">
                 <div key={activeView + (showCheckout ? '-checkout' : '')} className="animate-premium-transition relative z-20">
                         {renderView()}
-                        {activeView === 'customer_order' && (
+                        {activeView === 'customer_order' && !showCheckout && (
                             <aside className="hidden xl:block absolute right-0 w-80 top-[126px] bottom-[56px] z-10 bg-gradient-to-br from-green-700 to-green-800 rounded-l-2xl shadow-2xl overflow-hidden">
                             {/* Decorative semi-transparent rings */}
                             <div className="absolute -top-24 -right-16 w-40 h-40 border-2 border-white/10 rounded-full pointer-events-none" />
