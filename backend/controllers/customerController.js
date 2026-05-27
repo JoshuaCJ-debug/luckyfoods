@@ -26,7 +26,7 @@ const createCustomer = asyncHandler(async (req, res) => {
         phone,
         loyaltyPoints: loyaltyPoints || 0,
         // Note: password is optional when created by admin, can be set later
-        password: process.env.DEFAULT_TEMP_PASSWORD || 'TempPassword123!', // Temporary password, should be changed by customer
+        password: process.env.DEFAULT_TEMP_PASSWORD, // Must be set in .env; temporary password for customer to change
     });
 
     res.status(201).json({

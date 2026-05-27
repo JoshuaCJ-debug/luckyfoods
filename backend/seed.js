@@ -88,9 +88,11 @@ const seedUsers = async () => {
             console.log('   Existing products, orders, and other data will NOT be deleted\n');
         }
 
-        // Password configuration — read from env with defaults for local dev
-        const STAFF_PASSWORD = process.env.SEED_STAFF_PASSWORD || 'Staff123!';
-        const CUSTOMER_PASSWORD = process.env.SEED_CUSTOMER_PASSWORD || 'Customer123!';
+        // Password configuration — read from env (no fallbacks; must be set in .env)
+        const STAFF_PASSWORD = process.env.SEED_STAFF_PASSWORD;
+        const CUSTOMER_PASSWORD = process.env.SEED_CUSTOMER_PASSWORD;
+        if (!STAFF_PASSWORD) throw new Error('SEED_STAFF_PASSWORD not set in .env');
+        if (!CUSTOMER_PASSWORD) throw new Error('SEED_CUSTOMER_PASSWORD not set in .env');
 
         // Create Staff Users (including Admin)
         const staffUsers = [
@@ -191,7 +193,7 @@ const seedUsers = async () => {
             console.log('   • Only test users created/updated');
         }
         
-        console.log('\n🔑 Passwords read from environment (SEED_STAFF_PASSWORD / SEED_CUSTOMER_PASSWORD)');
+        console.log('\n🔑 Passwords read from environment variables (SEED_STAFF_PASSWORD / SEED_CUSTOMER_PASSWORD)');
         
         console.log('\n💡 USAGE:');
         console.log('   npm run seed              - Safe mode (preserve data)');

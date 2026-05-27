@@ -43,7 +43,6 @@ const listUsers = async () => {
         }
 
         console.log('\n📋 Passwords are configured via env (SEED_STAFF_PASSWORD / SEED_CUSTOMER_PASSWORD)');
-        console.log('   Defaults: Staff=Staff123!, Customer=Customer123!');
 
         process.exit(0);
     } catch (error) {
