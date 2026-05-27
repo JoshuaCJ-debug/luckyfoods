@@ -1030,33 +1030,54 @@ const AppRouter = () => {
                 <div key={activeView + (showCheckout ? '-checkout' : '')} className="animate-premium-transition relative z-20">
                         {renderView()}
                         {activeView === 'customer_order' && (
-                            <aside className="hidden xl:block absolute right-0 w-80 top-[126px] bottom-[56px] z-10 bg-gradient-to-br from-green-700 to-green-800 rounded-l-2xl shadow-2xl">
-                            <div className="px-6 pb-6 pt-2 text-white flex flex-col items-center text-center">
+                            <aside className="hidden xl:block absolute right-0 w-80 top-[126px] bottom-[56px] z-10 bg-gradient-to-br from-green-700 to-green-800 rounded-l-2xl shadow-2xl overflow-hidden">
+                            {/* Decorative semi-transparent rings */}
+                            <div className="absolute -top-12 -right-10 w-48 h-48 border-2 border-white/10 rounded-full pointer-events-none" />
+                            <div className="absolute top-1/3 -left-8 w-36 h-36 border-2 border-white/10 rounded-full pointer-events-none" />
+                            <div className="absolute top-1/2 right-2 w-14 h-14 border-2 border-white/5 rounded-full pointer-events-none" />
+                            <div className="absolute top-[55%] left-10 w-8 h-8 border border-white/5 rounded-full pointer-events-none" />
+                            <div className="absolute top-[80%] -right-4 w-24 h-24 border border-white/10 rounded-full pointer-events-none" />
+                            <div className="absolute bottom-12 -right-6 w-28 h-28 border border-white/5 rounded-full pointer-events-none" />
+                            <div className="absolute bottom-4 left-4 w-16 h-16 border border-white/5 rounded-full pointer-events-none" />
+                            <div className="absolute bottom-6 left-12 w-10 h-10 border-2 border-white/5 rounded-full pointer-events-none" />
+
+                            <div className="p-6 text-white flex flex-col items-center text-center">
+                                {/* Zone 1: The Hook */}
                                 <svg className="w-12 h-12 text-green-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l4.5 4.5M21 3l-4.5 4.5" />
                                 </svg>
-                                <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Archivo Black', sans-serif" }}>Welcome to<br />LUCKY FOODS!</h2>
-                                <p className="text-green-100 text-sm leading-relaxed mb-6">
+                                <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Archivo Black', sans-serif" }}>Welcome to<br />LUCKY FOODS!</h2>
+                                <p className="text-sm text-white/85 leading-relaxed mb-12">
                                     Discover our delicious menu crafted with love. Browse dishes, salads, and drinks.
                                 </p>
-                                <div className="w-12 h-0.5 bg-green-400 rounded-full mb-6"></div>
-                                <div className="space-y-4 text-sm w-full">
-                                    <div className="flex items-center gap-3 justify-center">
-                                        <svg className="w-5 h-5 text-green-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+
+                                {/* Zone 2: Operational Info */}
+                                <div className="w-full space-y-6">
+                                    <p className="text-xs font-bold tracking-widest text-green-300 uppercase">Store Info</p>
+                                    <div className="flex items-start gap-3 justify-center">
+                                        <svg className="w-5 h-5 text-green-300 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <span className="text-green-100">Open Daily<br /><strong className="text-white">8:00 AM - 10:00 PM</strong></span>
+                                        <div className="text-sm text-left">
+                                            <p className="text-green-300 text-xs">Open Daily</p>
+                                            <p className="text-white font-semibold">8:00 AM - 10:00 PM</p>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-3 justify-center">
-                                        <svg className="w-5 h-5 text-green-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                    <div className="flex items-start gap-3 justify-center">
+                                        <svg className="w-5 h-5 text-green-300 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                         </svg>
-                                        <span className="text-green-100">Order Online<br /><strong className="text-white">Pickup or Delivery</strong></span>
+                                        <div className="text-sm text-left">
+                                            <p className="text-green-300 text-xs">Order Online</p>
+                                            <p className="text-white font-semibold">Pickup or Delivery</p>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="pt-6 border-t border-green-700 w-full">
+
+                                {/* Zone 3: The Quote */}
+                                <div className="w-full mt-12 pt-6 border-t border-white/20">
                                     <p className="text-green-200 text-xs italic">&ldquo;Good food brings people together.&rdquo;</p>
                                 </div>
                             </div>
