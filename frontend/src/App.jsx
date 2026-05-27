@@ -1027,7 +1027,42 @@ const AppRouter = () => {
         <div className="flex flex-col h-screen bg-gray-100">
             <Navigation activeView={activeView} setActiveView={setActiveView} onCartClick={() => setCartOpen(true)} onOpenAuth={() => { pendingCheckout.current = false; setShowAuth(true); }} />
             <main className="flex-1 overflow-auto bg-gray-50">
-                <div key={activeView + (showCheckout ? '-checkout' : '')} className="h-full animate-premium-transition">{renderView()}</div>
+                <div key={activeView + (showCheckout ? '-checkout' : '')} className="animate-premium-transition relative z-20">
+                        {renderView()}
+                        {activeView === 'customer_order' && (
+                            <aside className="hidden xl:block absolute right-0 w-80 top-[126px] bottom-[56px] z-10 bg-gradient-to-br from-green-700 to-green-800 rounded-l-2xl shadow-2xl">
+                            <div className="px-6 pb-6 pt-2 text-white flex flex-col items-center text-center">
+                                <svg className="w-12 h-12 text-green-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l4.5 4.5M21 3l-4.5 4.5" />
+                                </svg>
+                                <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Archivo Black', sans-serif" }}>Welcome to<br />LUCKY FOODS!</h2>
+                                <p className="text-green-100 text-sm leading-relaxed mb-6">
+                                    Discover our delicious menu crafted with love. Browse dishes, salads, and drinks.
+                                </p>
+                                <div className="w-12 h-0.5 bg-green-400 rounded-full mb-6"></div>
+                                <div className="space-y-4 text-sm w-full">
+                                    <div className="flex items-center gap-3 justify-center">
+                                        <svg className="w-5 h-5 text-green-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span className="text-green-100">Open Daily<br /><strong className="text-white">8:00 AM - 10:00 PM</strong></span>
+                                    </div>
+                                    <div className="flex items-center gap-3 justify-center">
+                                        <svg className="w-5 h-5 text-green-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <span className="text-green-100">Order Online<br /><strong className="text-white">Pickup or Delivery</strong></span>
+                                    </div>
+                                </div>
+                                <div className="pt-6 border-t border-green-700 w-full">
+                                    <p className="text-green-200 text-xs italic">&ldquo;Good food brings people together.&rdquo;</p>
+                                </div>
+                            </div>
+                        </aside>
+                    )}
+                </div>
             </main>
             <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} onCheckout={handleCheckoutAction} />
             <AuthModal isOpen={showAuth} onClose={() => { setShowAuth(false); pendingCheckout.current = false; }} onAuthSuccess={handleAuthSuccess} />
