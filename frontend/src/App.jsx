@@ -650,7 +650,8 @@ const MenuView = ({ onAddToCart }) => {
                                                 return <img src={cx(400)} alt={item.name} loading="lazy"
                                                     srcSet={isCloud ? `${cx(400)} 400w, ${cx(800)} 800w, ${cx(1200)} 1200w` : undefined}
                                                     sizes={isCloud ? '(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw' : undefined}
-                                                    className="w-full h-full object-cover group-hover:scale-105 group-active:scale-105 transition-transform duration-300"
+                                                    className="w-full h-full object-cover group-hover:scale-105 group-active:scale-105 transition-all duration-500 opacity-0"
+                                                    onLoad={e => e.currentTarget.classList.add('opacity-100')}
                                                     onError={e => e.target.style.display = 'none'} />;
                                             })()}
                                         </div>
