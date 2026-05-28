@@ -1160,7 +1160,7 @@ const AppRouter = () => {
             switch (activeView) {
                 case 'staff_pos': return <StaffOrderPlacer token={token} />;
                 case 'staff_orders': return <OrdersView token={token} isStaff={true} />;
-                case 'staff_menu': return <ManagerView token={token} />;
+                case 'staff_menu': return (user?.role === 'Manager' || user?.role === 'Admin') ? <ManagerView token={token} /> : <div className="p-8 text-center text-red-600 font-bold">Access Denied</div>;
                 case 'admin_panel': return user?.role === 'Admin' ? <AdminPanel token={token} /> : <div className="p-8 text-center text-red-600 font-bold">Access Denied</div>;
                 default: return <div className="p-8"><Alert message="Welcome" type="info" /></div>;
             }

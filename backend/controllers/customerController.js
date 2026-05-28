@@ -133,17 +133,17 @@ const deleteCustomer = asyncHandler(async (req, res) => {
 // @route   PUT /api/customers/:id/loyalty-points
 // @access  Private/Manager+
 const updateLoyaltyPoints = asyncHandler(async (req, res) => {
-    const { pointsToAdd } = req.body;
+    const points = req.body.points ?? req.body.pointsToAdd;
 
-    if (pointsToAdd === undefined) {
+    if (points === undefined || points === null) {
         res.status(400);
-        throw new Error('Points to add is required');
+        throw new Error('Points value is required');
     }
 
     const customer = await Customer.findByIdAndUpdate(
         req.params.id,
         { 
-            $inc: { loyaltyPoints: pointsToAdd }
+            $inc: { loyaltyPoints: points }
         },
         { new: true, runValidators: true }
     ).select('-password');

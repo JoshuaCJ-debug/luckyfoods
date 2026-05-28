@@ -8,7 +8,7 @@ import {
     deleteCustomer,
     updateLoyaltyPoints 
 } from '../controllers/customerController.js';
-import { protect, managerCheck, adminCheck } from '../middleware/auth.js';
+import { protect, managerCheck, adminCheck, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ const router = express.Router();
 // @desc    Get all customers / Create new customer (admin)
 // @access  GET: Private/Staff, POST: Private/Admin or Manager
 router.route('/')
-    .get(protect, managerCheck, getAllCustomers)
+    .get(protect, requireRole('Waiter'), getAllCustomers)
     .post(protect, managerCheck, createCustomer);
 
 // @route   GET /api/customers/:id
