@@ -170,6 +170,27 @@ const seedUsers = async () => {
             }
         }
 
+        // ─── Update image URLs to Cloudinary (safe, idempotent) ─────────
+        const productsFile = 'seed-data/products.json';
+        if (fs.existsSync(productsFile)) {
+            const seedData = JSON.parse(fs.readFileSync(productsFile, 'utf-8'));
+            const db = mongoose.connection.db;
+            let imgUpdated = 0;
+            for (const collName of ['dishes', 'drinks', 'salads']) {
+                const seedItems = seedData[collName];
+                if (!seedItems) continue;
+                const cloudUrls = Object.fromEntries(seedItems.map(i => [i.name, i.image]));
+                const items = await db.collection(collName).find({ name: { $in: Object.keys(cloudUrls) } }).toArray();
+                for (const item of items) {
+                    const target = cloudUrls[item.name];
+                    if (!target || (item.image && item.image.startsWith('http'))) continue;
+                    await db.collection(collName).updateOne({ _id: item._id }, { $set: { image: target } });
+                    imgUpdated++;
+                }
+            }
+            if (imgUpdated) console.log(`   🖼️  Updated ${imgUpdated} menu item images to Cloudinary`);
+        }
+
         console.log('\n🎉 Seeding completed!');
         console.log('\n📋 CREDENTIALS SUMMARY:');
         console.log('\n👨‍💼 STAFF LOGIN:');
@@ -200,6 +221,7 @@ const seedUsers = async () => {
             console.log('   • Existing orders: PRESERVED');
             console.log('   • Existing customers (non-test): PRESERVED');
             console.log('   • Only test users created/updated');
+            console.log('   • Menu images updated to Cloudinary URLs (if needed)');
         }
         
         console.log('\n🔑 Passwords read from environment variables (SEED_STAFF_PASSWORD / SEED_CUSTOMER_PASSWORD)');
