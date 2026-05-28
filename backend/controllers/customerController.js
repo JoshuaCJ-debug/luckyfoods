@@ -107,7 +107,7 @@ const updateCustomer = asyncHandler(async (req, res) => {
             ...(phone && { phone }),
             ...(loyaltyPoints !== undefined && req.staff && { loyaltyPoints }), // Only staff can update loyalty points
         },
-        { new: true, runValidators: true }
+        { returnDocument: 'after', runValidators: true }
     ).select('-password');
 
     res.json(updatedCustomer);
@@ -145,7 +145,7 @@ const updateLoyaltyPoints = asyncHandler(async (req, res) => {
         { 
             $inc: { loyaltyPoints: points }
         },
-        { new: true, runValidators: true }
+        { returnDocument: 'after', runValidators: true }
     ).select('-password');
 
     if (!customer) {

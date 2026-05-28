@@ -68,7 +68,7 @@ const updateMenuItem = asyncHandler(async (req, res) => {
     const updatedItem = await Model.findByIdAndUpdate(
         id, 
         { $set: setFields }, 
-        { new: true, runValidators: true } 
+        { returnDocument: 'after', runValidators: true } 
     );
 
     if (!updatedItem) {

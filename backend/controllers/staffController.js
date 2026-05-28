@@ -125,7 +125,7 @@ const updateStaff = asyncHandler(async (req, res) => {
             ...(contact && { contact }),
             ...(role && { role }),
         },
-        { new: true, runValidators: true }
+        { returnDocument: 'after', runValidators: true }
     ).select('-password');
 
     res.json(updatedStaff);
