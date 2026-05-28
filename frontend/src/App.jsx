@@ -640,7 +640,7 @@ const MenuView = ({ onAddToCart }) => {
                     <h3 className="text-2xl font-bold text-gray-800 mb-4">{category}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-6">
                         {items.map(item => {
-                            const delay = 700 + cardIdx++ * 70;
+                            const delay = 700 + cardIdx++ * 120;
                             const priceDisplay = typeof item.price === 'object' ? `From UGX ${Object.values(item.price)[0]?.toLocaleString()}` : `UGX ${Number(item.price).toLocaleString()}`;
                             return (
                                 <div key={item._id} className="bg-white rounded-xl shadow-sm hover:shadow-lg active:shadow-lg transition-all duration-300 overflow-hidden border hover:border-green-300 active:border-green-300 group">
