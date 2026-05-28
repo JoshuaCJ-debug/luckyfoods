@@ -10,7 +10,8 @@
     "startdb": "node scripts/start-db.js",
     "stopdb": "mongosh --eval \"db.adminCommand('shutdown')\"",
     "export": "node scripts/export-products.js",
-    "migrate:images": "node scripts/migrate-images.js"
+    "migrate:images": "node scripts/migrate-images.js",
+    "update:images": "node scripts/update-image-urls.js"
   },
   "keywords": [],
   "author": "",
