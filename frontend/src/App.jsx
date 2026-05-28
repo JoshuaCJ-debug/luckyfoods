@@ -643,9 +643,16 @@ const MenuView = ({ onAddToCart }) => {
                                 <div key={item._id} className="bg-white rounded-xl shadow-sm hover:shadow-lg active:shadow-lg transition-all duration-300 overflow-hidden border hover:border-green-300 active:border-green-300 group">
                                     {item.image && (
                                         <div className="h-48 overflow-hidden cursor-pointer" onClick={(e) => handleAddToCart(item, e.currentTarget)}>
-                                            <img src={item.image.startsWith('http') ? item.image : `/images/menu/${item.image}`} alt={item.name}
-                                                className="w-full h-full object-cover group-hover:scale-105 group-active:scale-105 transition-transform duration-300"
-                                                onError={e => e.target.style.display = 'none'} />
+                                            {(() => {
+                                                const imgUrl = item.image.startsWith('http') ? item.image : `/images/menu/${item.image}`;
+                                                const isCloud = imgUrl.includes('res.cloudinary.com');
+                                                const cx = (w) => isCloud ? imgUrl.replace('/image/upload/', `/image/upload/f_auto,q_80,w_${w}/`) : imgUrl;
+                                                return <img src={cx(400)} alt={item.name} loading="lazy"
+                                                    srcSet={isCloud ? `${cx(400)} 400w, ${cx(800)} 800w, ${cx(1200)} 1200w` : undefined}
+                                                    sizes={isCloud ? '(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw' : undefined}
+                                                    className="w-full h-full object-cover group-hover:scale-105 group-active:scale-105 transition-transform duration-300"
+                                                    onError={e => e.target.style.display = 'none'} />;
+                                            })()}
                                         </div>
                                     )}
                                     <div className="p-5">
