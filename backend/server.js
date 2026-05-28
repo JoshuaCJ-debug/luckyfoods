@@ -16,6 +16,7 @@ import customerRoutes from './routes/customerRoutes.js';
 import { isProduction, isLocalDev, getEnvironmentLabel } from './config/env.js';
 import healthRoutes from './routes/healthRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import { runSeed } from './seed.js';
 
 //load the environment varriable from .env file
 dotenv.config();
@@ -251,7 +252,12 @@ app.use(errorHandler);
 //start the server
 const PORT = process.env.PORT || 5000;
 
-connectDB().then(() => {
+connectDB().then(async () => {
+    if (process.env.RUN_SEED === 'true') {
+        console.log('\n🌱 RUN_SEED is set — running seed...\n');
+        try { await runSeed({ reset: false }); console.log('🌱 Seed complete.\n'); }
+        catch (e) { console.error('🌱 Seed failed:', e.message); }
+    }
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT} 🌐`);
       console.log(`Environment: ${getEnvironmentLabel()}`);

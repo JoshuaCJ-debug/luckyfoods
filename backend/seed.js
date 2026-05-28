@@ -5,6 +5,7 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import Staff from './models/Staff.js';
 import Customer from './models/Customer.js';
 import { Dish, Drink, Salad } from './models/Menu.js';
@@ -12,12 +13,13 @@ import Order from './models/Order.js';
 
 dotenv.config();
 
+const isCLI = process.argv[1] === fileURLToPath(import.meta.url);
 const shouldReset = process.argv.includes('--reset');
 
 const seedProducts = async () => {
     const productsFile = 'seed-data/products.json';
     if (!fs.existsSync(productsFile)) {
-        console.log('   ⚠️  Product data file not found. Run `npm run export` first.');
+        log('   ⚠️  Product data file not found. Run `npm run export` first.');
         return;
     }
 
@@ -27,9 +29,9 @@ const seedProducts = async () => {
     for (const item of data.dishes) {
         try {
             await Dish.create(item);
-            console.log(`   ✅ Dish added: ${item.name}`);
+            log(`   ✅ Dish added: ${item.name}`);
         } catch (err) {
-            console.log(`   ⚠️  Dish "${item.name}" already exists: ${err.message}`);
+            log(`   ⚠️  Dish "${item.name}" already exists: ${err.message}`);
         }
     }
 
@@ -37,9 +39,9 @@ const seedProducts = async () => {
     for (const item of data.drinks) {
         try {
             await Drink.create(item);
-            console.log(`   ✅ Drink added: ${item.name}`);
+            log(`   ✅ Drink added: ${item.name}`);
         } catch (err) {
-            console.log(`   ⚠️  Drink "${item.name}" already exists: ${err.message}`);
+            log(`   ⚠️  Drink "${item.name}" already exists: ${err.message}`);
         }
     }
 
@@ -47,17 +49,18 @@ const seedProducts = async () => {
     for (const item of data.salads) {
         try {
             await Salad.create(item);
-            console.log(`   ✅ Salad added: ${item.name}`);
+            log(`   ✅ Salad added: ${item.name}`);
         } catch (err) {
-            console.log(`   ⚠️  Salad "${item.name}" already exists: ${err.message}`);
+            log(`   ⚠️  Salad "${item.name}" already exists: ${err.message}`);
         }
     }
 };
 
-const seedUsers = async () => {
+export const runSeed = async (options = {}) => {
+    const { reset = false } = options;
     try {
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log('MongoDB connected for seeding...');
+        const log = console.log.bind(console);
+        const logError = console.error.bind(console);
 
         // Drop stale indexes that would block seeding
         const staffCol = mongoose.connection.db.collection('staff');
@@ -65,19 +68,19 @@ const seedUsers = async () => {
         const staleIndex = indexes.find(i => i.name === 'loginContact_1');
         if (staleIndex) {
             await staffCol.dropIndex('loginContact_1');
-            console.log('   🧹 Dropped stale loginContact_1 index from staff collection');
+            log('   🧹 Dropped stale loginContact_1 index from staff collection');
         }
 
         // RESET MODE: Only if explicitly requested with --reset flag
-        if (shouldReset) {
-            console.log('\n⚠️  ⚠️  ⚠️  WARNING: RESET MODE ⚠️  ⚠️  ⚠️');
-            console.log('   All collections will be DELETED: Staff, Customer, Menu, Order');
-            console.log('   • Products added through the app interface will be LOST');
-            console.log('   • Only products in seed-data/products.json will be restored');
-            console.log('   • Run `npm run export` FIRST to backup any new products\n');
-            console.log('   Press Ctrl+C within 5 seconds to cancel...');
+        if (reset) {
+            log('\n⚠️  ⚠️  ⚠️  WARNING: RESET MODE ⚠️  ⚠️  ⚠️');
+            log('   All collections will be DELETED: Staff, Customer, Menu, Order');
+            log('   • Products added through the app interface will be LOST');
+            log('   • Only products in seed-data/products.json will be restored');
+            log('   • Run `npm run export` FIRST to backup any new products\n');
+            log('   Press Ctrl+C within 5 seconds to cancel...');
             await new Promise(r => setTimeout(r, 5000));
-            console.log('   Proceeding with reset...\n');
+            log('   Proceeding with reset...\n');
             
             await Staff.deleteMany({});
             await Customer.deleteMany({});
@@ -86,15 +89,15 @@ const seedUsers = async () => {
             await Salad.deleteMany({});
             await Order.deleteMany({});
             
-            console.log('✅ All collections cleared');
+            log('✅ All collections cleared');
             
             // Re-seed products from backup file
-            console.log('\n📦 Re-seeding products from backup file...');
-            console.log('   ⚠️ Any products added via the interface are now LOST.');
+            log('\n📦 Re-seeding products from backup file...');
+            log('   ⚠️ Any products added via the interface are now LOST.');
             await seedProducts();
         } else {
-            console.log('\n📝 SAFE MODE: Only creating/updating test users');
-            console.log('   Existing products, orders, and other data will NOT be deleted\n');
+            log('\n📝 SAFE MODE: Only creating/updating test users');
+            log('   Existing products, orders, and other data will NOT be deleted\n');
         }
 
         // Password configuration — read from env (no fallbacks; must be set in .env)
@@ -152,9 +155,9 @@ const seedUsers = async () => {
             try {
                 const staff = await Staff.create(staffData);
                 createdStaff.push(staff);
-                console.log(`✅ Staff created: ${staff.name} (${staff.role})`);
+                log(`✅ Staff created: ${staff.name} (${staff.role})`);
             } catch (err) {
-                console.log(`⚠️  Staff "${staffData.name}" may already exist: ${err.message}`);
+                log(`⚠️  Staff "${staffData.name}" may already exist: ${err.message}`);
             }
         }
 
@@ -164,9 +167,9 @@ const seedUsers = async () => {
             try {
                 const customer = await Customer.create(customerData);
                 createdCustomers.push(customer);
-                console.log(`✅ Customer created: ${customer.name}`);
+                log(`✅ Customer created: ${customer.name}`);
             } catch (err) {
-                console.log(`⚠️  Customer "${customerData.name}" may already exist: ${err.message}`);
+                log(`⚠️  Customer "${customerData.name}" may already exist: ${err.message}`);
             }
         }
 
@@ -188,53 +191,58 @@ const seedUsers = async () => {
                     imgUpdated++;
                 }
             }
-            if (imgUpdated) console.log(`   🖼️  Updated ${imgUpdated} menu item images to Cloudinary`);
+            if (imgUpdated) log(`   🖼️  Updated ${imgUpdated} menu item images to Cloudinary`);
         }
 
-        console.log('\n🎉 Seeding completed!');
-        console.log('\n📋 CREDENTIALS SUMMARY:');
-        console.log('\n👨‍💼 STAFF LOGIN:');
+        log('\n🎉 Seeding completed!');
+        log('\n📋 CREDENTIALS SUMMARY:');
+        log('\n👨‍💼 STAFF LOGIN:');
         createdStaff.forEach((staff, index) => {
-            console.log(`  - Name: ${staff.name}`);
-            console.log(`    Email: ${staff.email}`);
-            console.log(`    Role: ${staff.role}`);
-            console.log(`    Password: ${staffUsers[index].password}`);
-            console.log('');
+            log(`  - Name: ${staff.name}`);
+            log(`    Email: ${staff.email}`);
+            log(`    Role: ${staff.role}`);
+            log(`    Password: ${staffUsers[index].password}`);
+            log('');
         });
 
-        console.log('\n👤 CUSTOMER LOGIN:');
+        log('\n👤 CUSTOMER LOGIN:');
         createdCustomers.forEach((customer, index) => {
-            console.log(`  - Name: ${customer.name}`);
-            console.log(`    Email: ${customer.email}`);
-            console.log(`    Password: ${customerUsers[index].password}`);
-            console.log(`    Loyalty Points: ${customer.loyaltyPoints}`);
-            console.log('');
+            log(`  - Name: ${customer.name}`);
+            log(`    Email: ${customer.email}`);
+            log(`    Password: ${customerUsers[index].password}`);
+            log(`    Loyalty Points: ${customer.loyaltyPoints}`);
+            log('');
         });
         
-        if (shouldReset) {
-            console.log('\n⚠️  RESET MODE APPLIED:');
-            console.log('   ✅ All collections were wiped and recreated');
-            console.log('   ✅ Products restored from backup');
+        if (reset) {
+            log('\n⚠️  RESET MODE APPLIED:');
+            log('   ✅ All collections were wiped and recreated');
+            log('   ✅ Products restored from backup');
         } else {
-            console.log('\n✅ SAFE MODE:');
-            console.log('   • Existing menu items: PRESERVED');
-            console.log('   • Existing orders: PRESERVED');
-            console.log('   • Existing customers (non-test): PRESERVED');
-            console.log('   • Only test users created/updated');
-            console.log('   • Menu images updated to Cloudinary URLs (if needed)');
+            log('\n✅ SAFE MODE:');
+            log('   • Existing menu items: PRESERVED');
+            log('   • Existing orders: PRESERVED');
+            log('   • Existing customers (non-test): PRESERVED');
+            log('   • Only test users created/updated');
+            log('   • Menu images updated to Cloudinary URLs (if needed)');
         }
         
-        console.log('\n🔑 Passwords read from environment variables (SEED_STAFF_PASSWORD / SEED_CUSTOMER_PASSWORD)');
+        log('\n🔑 Passwords read from environment variables (SEED_STAFF_PASSWORD / SEED_CUSTOMER_PASSWORD)');
         
-        console.log('\n💡 USAGE:');
-        console.log('   npm run seed              - Safe mode (preserve data)');
-        console.log('   npm run seed -- --reset   - Reset mode (wipe all)');
+        log('\n💡 USAGE:');
+        log('   npm run seed              - Safe mode (preserve data)');
+        log('   npm run seed -- --reset   - Reset mode (wipe all)');
 
-        process.exit(0);
+        return;
     } catch (error) {
-        console.error('❌ Error during seeding:', error);
-        process.exit(1);
+        logError('❌ Error during seeding:', error);
+        throw error;
     }
 };
 
-seedUsers();
+if (isCLI) {
+    mongoose.connect(process.env.MONGO_URI).then(() => {
+        console.log('MongoDB connected for seeding...');
+        return runSeed({ reset: shouldReset });
+    }).then(() => process.exit(0)).catch(() => process.exit(1));
+}
