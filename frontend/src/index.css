@@ -26,3 +26,8 @@ code {
     opacity: 1;
   }
 }
+
+@keyframes card-nudge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}

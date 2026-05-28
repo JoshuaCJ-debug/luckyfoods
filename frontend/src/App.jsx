@@ -613,6 +613,7 @@ const MenuView = ({ onAddToCart }) => {
         return acc;
     }, {});
 
+    let cardIdx = 0;
     return (
         <div className="p-4 md:p-6 max-w-[1600px] mx-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-3 md:space-y-0 md:gap-8">
@@ -633,14 +634,16 @@ const MenuView = ({ onAddToCart }) => {
                 </div>
             </div>
 
+            
             {Object.entries(grouped).map(([category, items]) => (
                 <div key={category} className="mb-8">
                     <h3 className="text-2xl font-bold text-gray-800 mb-4">{category}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-6">
                         {items.map(item => {
+                            const delay = 700 + cardIdx++ * 70;
                             const priceDisplay = typeof item.price === 'object' ? `From UGX ${Object.values(item.price)[0]?.toLocaleString()}` : `UGX ${Number(item.price).toLocaleString()}`;
                             return (
-                                <div key={item._id} className="bg-white rounded-xl shadow-sm hover:shadow-lg active:shadow-lg transition-all duration-300 overflow-hidden border hover:border-green-300 active:border-green-300 group">
+                                <div key={item._id} style={{ animationDelay: `${delay}ms` }} className="bg-white rounded-xl shadow-sm hover:shadow-lg active:shadow-lg transition-all duration-300 overflow-hidden border hover:border-green-300 active:border-green-300 group animate-[card-nudge_600ms_ease-out_both]">
                                     {item.image && (
                                         <div className="h-48 overflow-hidden cursor-pointer" onClick={(e) => handleAddToCart(item, e.currentTarget)}>
                                             {(() => {
