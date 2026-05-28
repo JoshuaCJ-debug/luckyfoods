@@ -1013,6 +1013,7 @@ const ManagerView = ({ token }) => {
     const [tab, setTab] = useState('menu'); const [loading, setLoading] = useState(true); const [error, setError] = useState(null);
     const [menuItems, setMenuItems] = useState({ dishes:[], drinks:[], salads:[] }); const [adding, setAdding] = useState(false);
     const [newItem, setNewItem] = useState({ name:'',description:'',price:'',category:'dishes',image:'' });
+    const [uploading, setUploading] = useState(false);
     const [staff, setStaff] = useState([]); const [customers, setCustomers] = useState([]);
     const [newStaff, setNewStaff] = useState({ name:'',role:'Waiter',contact:'',password:'' });
 
@@ -1023,6 +1024,24 @@ const ManagerView = ({ token }) => {
 
     const handleAdd = async (e) => { e.preventDefault(); try { await apiCall(`/api/menu/${newItem.category}`,'POST',newItem,token); setAdding(false); setNewItem({name:'',description:'',price:'',category:'dishes',image:''}); const m=await apiCall('/api/menu','GET',null,token); setMenuItems({dishes:m.dishes||[],drinks:m.drinks||[],salads:m.salads||[]}); } catch(err){setError(err.message)} };
     const handleAddStaff = async (e) => { e.preventDefault(); try { await apiCall('/api/staff/register','POST',newStaff,token); setNewStaff({name:'',role:'Waiter',contact:'',password:''}); setStaff(await apiCall('/api/staff','GET',null,token)); } catch(err){setError(err.message)} };
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            const res = await fetch(`${API_BASE_URL}/api/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData,
+            });
+            if (!res.ok) throw new Error('Upload failed');
+            const data = await res.json();
+            setNewItem(prev => ({ ...prev, image: data.url }));
+        } catch (err) { setError(err.message); }
+        finally { setUploading(false); }
+    };
 
     if (loading) return <Loader />;
     if (error) return <Alert message={error} type="error" onClose={()=>setError(null)} />;
@@ -1036,7 +1055,7 @@ const ManagerView = ({ token }) => {
             {tab==='menu' && (
                 <div className="space-y-4">
                     <div className="flex justify-between items-center"><h3 className="text-xl font-semibold">Menu Items</h3><button onClick={()=>setAdding(true)} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">+ Add Item</button></div>
-                    {adding && <div className="bg-white p-4 rounded-lg shadow-md"><h4 className="font-bold mb-3">New Menu Item</h4><form onSubmit={handleAdd} className="space-y-3"><input type="text" placeholder="Name" value={newItem.name} onChange={e=>setNewItem({...newItem,name:e.target.value})} className="w-full p-2 border rounded text-sm" required /><input type="number" placeholder="Price" value={newItem.price} onChange={e=>setNewItem({...newItem,price:e.target.value})} className="w-full p-2 border rounded text-sm" required /><textarea placeholder="Description" value={newItem.description} onChange={e=>setNewItem({...newItem,description:e.target.value})} className="w-full p-2 border rounded text-sm" rows={2} /><div className="flex space-x-2"><button type="button" onClick={()=>setAdding(false)} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 text-sm">Cancel</button><button type="submit" className="px-4 py-2 bg-green-700 text-white rounded-md hover:bg-green-800 text-sm">Save</button></div></form></div>}
+                    {adding && <div className="bg-white p-4 rounded-lg shadow-md"><h4 className="font-bold mb-3">New Menu Item</h4><form onSubmit={handleAdd} className="space-y-3"><input type="text" placeholder="Name" value={newItem.name} onChange={e=>setNewItem({...newItem,name:e.target.value})} className="w-full p-2 border rounded text-sm" required /><input type="number" placeholder="Price" value={newItem.price} onChange={e=>setNewItem({...newItem,price:e.target.value})} className="w-full p-2 border rounded text-sm" required /><textarea placeholder="Description" value={newItem.description} onChange={e=>setNewItem({...newItem,description:e.target.value})} className="w-full p-2 border rounded text-sm" rows={2} /><div className="flex items-center gap-3">{newItem.image ? <div className="relative w-16 h-16 rounded overflow-hidden border"><img src={newItem.image} alt="" className="w-full h-full object-cover" /><button type="button" onClick={()=>setNewItem(prev=>({...prev,image:''}))} className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-xs leading-none rounded-bl">x</button></div>:<label className={`flex items-center gap-2 px-3 py-2 border rounded-md text-sm cursor-pointer ${uploading?'opacity-50 pointer-events-none':''}`}><svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>{uploading?'Uploading...':'Image'}<input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" /></label>}{uploading && <svg className="animate-spin h-4 w-4 text-green-600" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}</div><div className="flex space-x-2"><button type="button" onClick={()=>setAdding(false)} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 text-sm">Cancel</button><button type="submit" className="px-4 py-2 bg-green-700 text-white rounded-md hover:bg-green-800 text-sm">Save</button></div></form></div>}
                     {['dishes','drinks','salads'].map(cat => (
                         <div key={cat} className="bg-white p-4 rounded-lg shadow"><h4 className="text-lg font-bold text-green-700 capitalize mb-3">{cat} ({menuItems[cat]?.length||0})</h4>
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">{(menuItems[cat]||[]).map(item => (<div key={item._id} className="p-3 border rounded-lg text-sm"><p className="font-bold">{item.name}</p><p className="text-gray-600">UGX {typeof item.price==='object'?Object.values(item.price)[0]:Number(item.price).toLocaleString()}</p></div>))}</div>

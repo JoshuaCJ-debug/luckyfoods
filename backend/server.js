@@ -15,9 +15,18 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
 import { isProduction, isLocalDev, getEnvironmentLabel } from './config/env.js';
 import healthRoutes from './routes/healthRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 
 //load the environment varriable from .env file
 dotenv.config();
+
+// ─── Cloudinary Configuration ──────────────────────────────────────────────
+import { v2 as cloudinary } from 'cloudinary';
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 //initialize the express object using the app varriable constant 
 const app = express();
@@ -232,6 +241,7 @@ app.get('/api/menu', getMenu);
 app.use('/api/menu', menuRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/upload', uploadRoutes);
 app.use('/api/customers', customerRoutes);
 
 //errro handler midlewares
