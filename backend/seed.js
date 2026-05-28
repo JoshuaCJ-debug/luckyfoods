@@ -58,7 +58,16 @@ const seedUsers = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('MongoDB connected for seeding...');
-        
+
+        // Drop stale indexes that would block seeding
+        const staffCol = mongoose.connection.db.collection('staff');
+        const indexes = await staffCol.indexes();
+        const staleIndex = indexes.find(i => i.name === 'loginContact_1');
+        if (staleIndex) {
+            await staffCol.dropIndex('loginContact_1');
+            console.log('   🧹 Dropped stale loginContact_1 index from staff collection');
+        }
+
         // RESET MODE: Only if explicitly requested with --reset flag
         if (shouldReset) {
             console.log('\n⚠️  ⚠️  ⚠️  WARNING: RESET MODE ⚠️  ⚠️  ⚠️');
