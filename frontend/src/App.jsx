@@ -643,9 +643,9 @@ const MenuView = ({ onAddToCart }) => {
                             const delay = 700 + cardIdx++ * 70;
                             const priceDisplay = typeof item.price === 'object' ? `From UGX ${Object.values(item.price)[0]?.toLocaleString()}` : `UGX ${Number(item.price).toLocaleString()}`;
                             return (
-                                <div key={item._id} style={{ animationDelay: `${delay}ms` }} className="bg-white rounded-xl shadow-sm hover:shadow-lg active:shadow-lg transition-all duration-300 overflow-hidden border hover:border-green-300 active:border-green-300 group animate-[card-nudge_600ms_ease-out_both]">
+                                <div key={item._id} className="bg-white rounded-xl shadow-sm hover:shadow-lg active:shadow-lg transition-all duration-300 overflow-hidden border hover:border-green-300 active:border-green-300 group">
                                     {item.image && (
-                                        <div className="h-48 overflow-hidden cursor-pointer" onClick={(e) => handleAddToCart(item, e.currentTarget)}>
+                                        <div style={{ animationDelay: `${delay}ms` }} className="h-48 overflow-hidden cursor-pointer animate-[card-nudge_600ms_ease-out_both]" onClick={(e) => handleAddToCart(item, e.currentTarget)}>
                                             {(() => {
                                                 const imgUrl = item.image.startsWith('http') ? item.image : `/images/menu/${item.image}`;
                                                 const isCloud = imgUrl.includes('res.cloudinary.com');
