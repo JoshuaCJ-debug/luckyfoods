@@ -22,17 +22,12 @@ const getMenu = asyncHandler(async (req, res) => {
     });
 });
 
-// @desc    Update the price of a specific menu item
+// @desc    Update a menu item (any field)
 // @route   PUT /api/menu/:collection/:id
 // @access  Private/Manager Only
 const updateMenuItem = asyncHandler(async (req, res) => {
     const { collection, id } = req.params;
-    const { price, nestedKey } = req.body; 
-
-    if (!price) {
-        res.status(400);
-        throw new Error('Price field is required for update.');
-    }
+    const { name, description, price, image, nestedKey } = req.body;
 
     // 1. Determine Mongoose Model
     let Model;
@@ -51,21 +46,28 @@ const updateMenuItem = asyncHandler(async (req, res) => {
         throw new Error('Invalid item ID format');
     }
     
-    // 3. Prepare the Update Object (Handles nested updates)
-    let updateOperation = {};
+    // 3. Build update object from provided fields
+    const setFields = {};
+    if (name !== undefined) setFields.name = name;
+    if (description !== undefined) setFields.description = description;
+    if (image !== undefined) setFields.image = image;
+    if (price !== undefined) {
+        if (nestedKey) {
+            setFields[`price.${nestedKey}`] = price;
+        } else {
+            setFields.price = price;
+        }
+    }
 
-    if (nestedKey) {
-        // Use dot notation to update only that sub-field (e.g., price.beef_katogo)
-        updateOperation = { $set: { [`price.${nestedKey}`]: price } };
-    } else {
-        // Replace the entire 'price' field (simple update)
-        updateOperation = { $set: { price: price } };
+    if (Object.keys(setFields).length === 0) {
+        res.status(400);
+        throw new Error('No fields provided to update');
     }
 
     // 4. Find and Update the item
     const updatedItem = await Model.findByIdAndUpdate(
         id, 
-        updateOperation, 
+        { $set: setFields }, 
         { new: true, runValidators: true } 
     );
 
