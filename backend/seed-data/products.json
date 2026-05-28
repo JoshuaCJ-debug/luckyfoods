@@ -4,14 +4,14 @@
       "name": "pilau",
       "price": "8004",
       "description": "Fragrant spiced rice cooked with tender beef and traditional East African seasonings, served hot and flavorful.",
-      "image": "pilau.jpeg",
+      "image": "https://res.cloudinary.com/dlvt2nfvk/image/upload/v1779940603/luckyfoods/menu/pilau.jpg",
       "updatedAt": "2025-11-27T02:25:17.585Z"
     },
     {
       "name": "matooke",
       "price": "3000",
       "description": "Soft, steamed mashed plantain prepared the traditional Ugandan way, smooth with a rich taste.",
-      "image": "matooke.png",
+      "image": "https://res.cloudinary.com/dlvt2nfvk/image/upload/v1779943736/luckyfoods/menu/matooke.jpg",
       "updatedAt": "2025-11-27T01:34:30.972Z"
     },
     {
@@ -21,7 +21,7 @@
         "beans_katogo": "3001"
       },
       "description": "Katogo served with creamy beans katogo — slow-cooked for rich, comforting flavor.",
-      "image": "katogo.jpg",
+      "image": "https://res.cloudinary.com/dlvt2nfvk/image/upload/v1779943740/luckyfoods/menu/katogo.jpg",
       "updatedAt": "2025-11-27T01:50:00.351Z"
     }
   ],
@@ -33,13 +33,13 @@
         "small": 2600
       },
       "description": "Chilled fizzy soda available in big and small sizes, served cold for maximum refreshment.",
-      "image": "soda.png"
+      "image": "https://res.cloudinary.com/dlvt2nfvk/image/upload/v1779943756/luckyfoods/menu/soda.jpg"
     },
     {
       "name": "juice",
       "price": 3000,
       "description": "Fresh tropical fruit juice bursting with natural flavor, served chilled.",
-      "image": "juice.png"
+      "image": "https://res.cloudinary.com/dlvt2nfvk/image/upload/v1779943767/luckyfoods/menu/juice.jpg"
     },
     {
       "name": "water",
@@ -48,7 +48,7 @@
         "small": 1500
       },
       "description": "Pure bottled water in big and small sizes, served cold to keep you refreshed and hydrated.",
-      "image": "water.jpeg"
+      "image": "https://res.cloudinary.com/dlvt2nfvk/image/upload/v1779943794/luckyfoods/menu/water.jpg"
     }
   ],
   "salads": [
@@ -56,19 +56,19 @@
       "name": "cabbage",
       "price": 1200,
       "description": "Freshly shredded cabbage mixed with light vegetables for a crisp, refreshing side dish.",
-      "image": "cabbage.jpeg"
+      "image": "https://res.cloudinary.com/dlvt2nfvk/image/upload/v1779943802/luckyfoods/menu/cabbage.jpg"
     },
     {
       "name": "greens",
       "price": 1000,
       "description": "A vibrant mix of fresh leafy greens, washed and served crisp for a healthy, natural accompaniment.",
-      "image": "greenz.jpg"
+      "image": "https://res.cloudinary.com/dlvt2nfvk/image/upload/v1779943810/luckyfoods/menu/greenz.jpg"
     },
     {
       "name": "carrot",
       "price": 1500,
       "description": "Bright, sweet, and crunchy shredded carrots lightly dressed for a refreshing side.",
-      "image": "carrot.jpeg"
+      "image": "https://res.cloudinary.com/dlvt2nfvk/image/upload/v1779943818/luckyfoods/menu/carrot.jpg"
     }
   ]
 }
