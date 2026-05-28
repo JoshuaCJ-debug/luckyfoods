@@ -44,16 +44,13 @@ const staffSchema = new mongoose.Schema({
 // --- SCHEMA MIDDLEWARE (SECURITY HOOKS) ---
 
 // 1. Hash the password before saving the staff document
-staffSchema.pre('save', async function(next) {
+staffSchema.pre('save', async function() {
     // Only hash the password if it has been modified (or is new)
-    if (!this.isModified('password')) {
-        return next();
-    }
+    if (!this.isModified('password')) return;
 
     // Hash the password with a cost factor of 10
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    next();
 });
 
 // 2. Instance method to compare entered password with the hashed password in the database
