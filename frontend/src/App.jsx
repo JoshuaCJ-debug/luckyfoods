@@ -514,9 +514,22 @@ const CartDrawer = ({ isOpen, onClose, onCheckout }) => {
 };
 
 // ─── FULL-WIDTH MENU (public — no login required) ──────
+const MENU_CACHE_KEY = 'menu_cache_v1';
+
+const readMenuCache = () => {
+    try {
+        const raw = localStorage.getItem(MENU_CACHE_KEY);
+        const cached = raw ? JSON.parse(raw) : null;
+        return Array.isArray(cached) && cached.length ? cached : null;
+    } catch { return null; }
+};
+
 const MenuView = ({ onAddToCart }) => {
-    const [menu, setMenu] = useState(null);
-    const [loading, setLoading] = useState(true);
+    // Hydrate instantly from the last cached menu so returning visitors skip the
+    // skeleton entirely — fresh data is fetched in the background and swapped in.
+    const cachedMenu = useMemo(() => readMenuCache(), []);
+    const [menu, setMenu] = useState(cachedMenu);
+    const [loading, setLoading] = useState(!cachedMenu);
     const [error, setError] = useState(null);
     const [search, setSearch] = useState('');
     const [activeCategory, setActiveCategory] = useState('All');
@@ -524,15 +537,18 @@ const MenuView = ({ onAddToCart }) => {
     const buttonRefs = useRef({});
 
     useEffect(() => {
+        const hasCache = !!cachedMenu;
         const fetchWithRetry = async () => {
+            // When we already show cached data, the wait is invisible — keep messaging silent.
+            // On a true first visit, reassure that a sleeping backend may take a moment to wake.
             const attempts = [
-                { timeout: 50000, delay: 0, label: 'Slow connection…' },
-                { timeout: 10000, delay: 0, label: 'Retrying…' },
-                { timeout: 30000, delay: 15000, label: 'Retrying…' },
+                { timeout: 50000, delay: 0, label: 'Waking up the kitchen — first visit can take up to a minute…' },
+                { timeout: 10000, delay: 0, label: 'Almost there — finishing up…' },
+                { timeout: 30000, delay: 15000, label: 'Almost there — finishing up…' },
             ];
             for (const attempt of attempts) {
                 if (attempt.delay) await new Promise(r => setTimeout(r, attempt.delay));
-                setRetrying(attempt.label);
+                if (!hasCache) setRetrying(attempt.label);
                 try {
                     const result = await apiCall('/api/menu', 'GET', null, null, attempt.timeout);
                     const combined = [
@@ -541,12 +557,14 @@ const MenuView = ({ onAddToCart }) => {
                         ...(result.drinks || []).map(d => ({ ...d, type: 'Drinks' })),
                     ];
                     setMenu(combined);
+                    try { localStorage.setItem(MENU_CACHE_KEY, JSON.stringify(combined)); } catch { /* quota/private mode — ignore */ }
                     setRetrying(null);
                     setLoading(false);
                     return;
                 } catch (err) {
                     if (attempt === attempts[attempts.length - 1]) {
-                        setError(err.message);
+                        // Only surface an error if we have nothing to show; otherwise keep stale data.
+                        if (!hasCache) setError(err.message);
                         setRetrying(null);
                         setLoading(false);
                     }
@@ -554,7 +572,7 @@ const MenuView = ({ onAddToCart }) => {
             }
         };
         fetchWithRetry();
-    }, []);
+    }, [cachedMenu]);
 
     const handleAddToCart = (item, button) => {
         onAddToCart(item, button);
