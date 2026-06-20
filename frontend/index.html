@@ -2,6 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <!--
+      Cold-start warm-up: fire a fire-and-forget ping at the backend as early as
+      possible (before fonts/CSS/JS download) so Render's free-tier instance starts
+      waking during page load instead of when the first real API call fires.
+      Vite substitutes %VITE_API_BASE_URL% at build time; falls back to the dev proxy.
+    -->
+    <link rel="preconnect" href="%VITE_API_BASE_URL%" crossorigin />
+    <script>
+      (function () {
+        var base = '%VITE_API_BASE_URL%';
+        // If the token wasn't substituted (unset env), use a relative path (dev proxy).
+        if (base.indexOf('%') === 0) base = '';
+        try { fetch(base + '/health', { mode: 'no-cors', cache: 'no-store' }).catch(function () {}); } catch (e) {}
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#15803d" />
